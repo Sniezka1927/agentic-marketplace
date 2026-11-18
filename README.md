@@ -1,15 +1,16 @@
 # agentic-marketplace
 
-To install dependencies:
+Marketplace of agent templates: anyone can publish a template and install it.
+
+## Structure
+
+- `app/` – Next.js UI (Bun), talks to the API over REST
+- `api/` – Bun + ElysiaJS REST API with PostgreSQL (Docker)
+
+## App
 
 ```bash
+cd app
 bun install
+bun run dev
 ```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.4.2. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
