@@ -1,6 +1,7 @@
 import { app } from "./app";
+import { config } from "./config";
 
-app.listen(Number(process.env.PORT ?? 3001));
+app.listen(config.port);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
