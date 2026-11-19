@@ -20,6 +20,9 @@ services:
     environment:
       PORT: 3001
       DATABASE_URL: postgres://${POSTGRES_USER:-marketplace}:${POSTGRES_PASSWORD:-marketplace}@db:5432/${POSTGRES_DB:-marketplace}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      X_MARKETPLACE_URL: ${X_MARKETPLACE_URL:-}
+      X_MARKETPLACE_TOKEN: ${X_MARKETPLACE_TOKEN:-}
     ports:
       - "3001:3001"
     depends_on:
