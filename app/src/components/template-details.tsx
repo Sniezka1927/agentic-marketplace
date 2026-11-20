@@ -7,6 +7,7 @@ import { authorName, formatDate } from "@/lib/format";
 import { useInstallToggle, useOwnInstallation, useTemplate } from "@/lib/queries";
 import { useAuth } from "./auth-provider";
 import { Badge } from "./badge";
+import { BotAvatar } from "./bot-avatar";
 import { Stars } from "./rating";
 import { Reviews } from "./reviews";
 import { TemplateManage } from "./template-manage";
@@ -40,7 +41,8 @@ export function TemplateDetails() {
         >
           {canManage ? "← My templates" : "← All templates"}
         </Link>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4">
+          <BotAvatar botId={t.botId} size={140} blobs />
           <h1 className="text-3xl font-semibold tracking-tight">{t.name}</h1>
           {t.status !== "PUBLISHED" && <Badge tone="muted">{t.status}</Badge>}
         </div>

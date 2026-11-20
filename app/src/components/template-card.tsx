@@ -3,6 +3,7 @@ import { authorName } from "@/lib/format";
 import type { Template } from "@/lib/types";
 import { Stars } from "./rating";
 import { Badge } from "./badge";
+import { BotAvatar } from "./bot-avatar";
 
 export function TemplateCard({ template }: { template: Template }) {
   return (
@@ -11,7 +12,10 @@ export function TemplateCard({ template }: { template: Template }) {
       className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5 transition-colors hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-semibold leading-tight">{template.name}</h2>
+        <div className="flex items-center gap-3">
+          <BotAvatar botId={template.botId} size={40} />
+          <h2 className="font-semibold leading-tight">{template.name}</h2>
+        </div>
         <div className="flex shrink-0 gap-1">
           {template.status !== "PUBLISHED" && <Badge tone="muted">{template.status}</Badge>}
         </div>
