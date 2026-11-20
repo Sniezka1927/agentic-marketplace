@@ -9,6 +9,7 @@ import { useAuth } from "./auth-provider";
 import { Badge } from "./badge";
 import { BotAvatar } from "./bot-avatar";
 import { Stars } from "./rating";
+import { MutationError } from "./mutation-error";
 import { Reviews } from "./reviews";
 import { TemplateManage } from "./template-manage";
 import { Button, Card, ErrorBox, Spinner } from "./ui";
@@ -83,6 +84,7 @@ export function TemplateDetails() {
               <Button className="w-full">Log in to install</Button>
             </Link>
           )}
+          <MutationError error={toggle.error} />
           {installed && (
             <a href={t.installUrl} className="text-center text-sm font-medium underline">
               Open in Grok Bot

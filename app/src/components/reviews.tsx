@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import { useReviewMutations, useReviews } from "@/lib/queries";
 import type { Review, Template } from "@/lib/types";
 import { useAuth } from "./auth-provider";
+import { MutationError } from "./mutation-error";
 import { Pagination } from "./pagination";
 import { StarInput, Stars } from "./rating";
 import { Button, ErrorBox, Spinner, Textarea } from "./ui";
@@ -68,6 +69,7 @@ export function Reviews({ template, installed }: { template: Template; installed
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">Reviews</h2>
+      <MutationError error={create.error ?? update.error ?? remove.error} />
 
       {canReview && (
         <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">

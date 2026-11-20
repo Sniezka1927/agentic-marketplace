@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
-import { ApiError, errorMessage } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { useTemplateMutations } from "@/lib/manage-queries";
 import type { Template } from "@/lib/types";
 import { ConfirmButton } from "./confirm-button";
+import { MutationError } from "./mutation-error";
 import { TemplateForm } from "./template-form";
 import { Button, Card, ErrorBox } from "./ui";
 
@@ -63,6 +63,14 @@ export function TemplateManage({
         </ConfirmButton>
       </div>
 
+      <MutationError
+        error={
+          (update.error instanceof ApiError && update.error.status === 409 ? null : update.error) ??
+          transition.error ??
+          remove.error
+        }
+      />
+
       {conflict && (
         <div className="flex flex-wrap items-center gap-3">
           <ErrorBox message="This template was changed by someone else since you opened it. Reload to get the latest version, then apply your changes again." />
@@ -90,7 +98,6 @@ export function TemplateManage({
                 onSuccess: () => setEditing(false),
                 onError: (error) => {
                   if (error instanceof ApiError && error.status === 409) setConflict(true);
-                  else toast.error(errorMessage(error));
                 },
               },
             )

@@ -1,8 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { api, ApiError, errorMessage } from "./api";
+import { api, ApiError } from "./api";
 import type {
   Category,
   Installation,
@@ -101,42 +100,35 @@ export const useInstallToggle = (templateId: string) => {
     mutationFn: async (installed: boolean) => {
       await api(`/templates/${templateId}/install`, { method: installed ? "DELETE" : "POST" });
     },
-    onSuccess: (_, wasInstalled) => {
-      toast.success(wasInstalled ? "Template uninstalled" : "Template installed");
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["installations"] });
       invalidateTemplate(templateId);
     },
-    onError: (error) => toast.error(errorMessage(error)),
   });
 };
 
 export const useReviewMutations = (templateId: string) => {
   const queryClient = useQueryClient();
   const invalidateTemplate = useInvalidateTemplate();
-  const onSuccess = (message: string) => () => {
-    toast.success(message);
+  const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["reviews", templateId] });
     invalidateTemplate(templateId);
   };
-  const onError = (error: Error) => toast.error(errorMessage(error));
 
   return {
     create: useMutation({
       mutationFn: (input: { rating: number; comment: string }) =>
         api<Review>(`/templates/${templateId}/reviews`, { method: "POST", body: input }),
-      onSuccess: onSuccess("Review added"),
-      onError,
+      onSuccess,
     }),
     update: useMutation({
       mutationFn: ({ id, ...input }: { id: string; rating: number; comment: string }) =>
         api<Review>(`/reviews/${id}`, { method: "PATCH", body: input }),
-      onSuccess: onSuccess("Review updated"),
-      onError,
+      onSuccess,
     }),
     remove: useMutation({
       mutationFn: (id: string) => api<void>(`/reviews/${id}`, { method: "DELETE" }),
-      onSuccess: onSuccess("Review deleted"),
-      onError,
+      onSuccess,
     }),
   };
 };
