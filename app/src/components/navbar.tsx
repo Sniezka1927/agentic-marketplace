@@ -12,7 +12,7 @@ export function Navbar() {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
       <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
-        <Link href="/" className="font-semibold">
+        <Link href="/templates" className="font-semibold">
           Agentic Marketplace
         </Link>
         <Link href="/templates" className="hover:underline">
@@ -44,7 +44,7 @@ export function Navbar() {
                 variant="secondary"
                 onClick={() => {
                   logout();
-                  router.push("/");
+                  router.push("/templates");
                 }}
               >
                 Log out

@@ -24,7 +24,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     try {
       if (mode === "login") await login(email, password);
       else await register({ email, password, displayName: String(form.get("displayName")) });
-      router.replace(next?.startsWith("/") ? next : "/");
+      router.replace(next?.startsWith("/") ? next : "/templates");
     } catch (e) {
       setError(errorMessage(e));
     } finally {
