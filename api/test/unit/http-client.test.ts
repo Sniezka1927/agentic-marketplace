@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from "bun:test";
-import { UpstreamError, createHttpClient } from "../src/x-marketplace";
+import { UpstreamError, createHttpClient } from "../../src/x-marketplace";
 
 const requests: { url: URL; authorization: string | null }[] = [];
 

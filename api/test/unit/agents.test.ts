@@ -1,11 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { createApp } from "../src/app";
+import { Elysia } from "elysia";
+import { agentsRoutes } from "../../src/routes/agents";
 import {
   UpstreamError,
   createMockClient,
   type MarketplaceClient,
   type XBot,
-} from "../src/x-marketplace";
+} from "../../src/x-marketplace";
 
 const bots: XBot[] = [
   { id: "a1", name: "Alpha", description: "Files helper", author: "Ala" },
@@ -13,7 +14,7 @@ const bots: XBot[] = [
   { id: "c3", name: "Gamma", description: "Drafts writer", author: "Ala" },
 ];
 
-const app = createApp(createMockClient(bots));
+const app = new Elysia().use(agentsRoutes(createMockClient(bots)));
 const get = (path: string) => app.handle(new Request(`http://localhost${path}`));
 
 describe("GET /agents", () => {
@@ -78,7 +79,7 @@ describe("upstream failure", () => {
       throw new UpstreamError(503);
     },
   };
-  const failingApp = createApp(failing);
+  const failingApp = new Elysia().use(agentsRoutes(failing));
 
   it("returns 502", async () => {
     const list = await failingApp.handle(new Request("http://localhost/agents"));
