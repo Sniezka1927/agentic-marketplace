@@ -7,6 +7,7 @@ import type { Container } from "./container";
 import { createAuthGuard } from "./modules/auth/auth.guard";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { categoryRoutes } from "./modules/categories/category.routes";
+import { templateRoutes } from "./modules/templates/template.routes";
 import { userRoutes } from "./modules/users/user.routes";
 import { agentsRoutes } from "./routes/agents";
 
@@ -37,6 +38,7 @@ export const createApp = (container: Container) => {
     .use(authRoutes(container.authService, guard))
     .use(userRoutes(container.userService, guard))
     .use(categoryRoutes(container.categoryService, guard))
+    .use(templateRoutes(container.templateService, guard))
     .use(agentsRoutes(container.marketplaceClient));
 };
 
