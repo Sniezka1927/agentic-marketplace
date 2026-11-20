@@ -1,18 +1,30 @@
 import { cors } from "@elysiajs/cors";
+import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
+import { errorHandler } from "./common/error-handler";
 import { config } from "./config";
+import type { Container } from "./container";
+import { categoryRoutes } from "./modules/categories/category.routes";
 import { agentsRoutes } from "./routes/agents";
-import {
-  createMarketplaceClient,
-  type MarketplaceClient,
-} from "./x-marketplace";
 
-export const createApp = (
-  client: MarketplaceClient = createMarketplaceClient(config.xMarketplace),
-) =>
+export const createApp = (container: Container) =>
   new Elysia()
     .use(cors({ origin: config.corsOrigin }))
-    .get("/", () => "Agentic Marketplace API")
-    .use(agentsRoutes(client));
+    .use(
+      openapi({
+        path: "/docs",
+        documentation: {
+          info: {
+            title: "Agentic Marketplace API",
+            version: "0.1.0",
+            description: "Marketplace of Grok Bot agent templates",
+          },
+        },
+      }),
+    )
+    .use(errorHandler)
+    .get("/", () => "Agentic Marketplace API", { detail: { hide: true } })
+    .use(categoryRoutes(container.categoryService))
+    .use(agentsRoutes(container.marketplaceClient));
 
-export const app = createApp();
+export type App = ReturnType<typeof createApp>;
