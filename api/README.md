@@ -66,7 +66,23 @@ bun test
 | PATCH | `/users/:id/role` | ADMIN (not own role → 422) |
 | GET | `/categories`, `/categories/:id` | public |
 | POST, PATCH, DELETE | `/categories`, `/categories/:id` | ADMIN (category with templates cannot be deleted → 409) |
+| GET | `/templates?page&limit&q&categoryId&source&sort` | public, only `PUBLISHED` (`sort`: newest, popular, rating, name) |
+| GET | `/templates/mine?status&...` | logged in, own templates in any status |
+| GET | `/templates/:id` | public for `PUBLISHED`, otherwise author or ADMIN |
+| POST | `/templates` | logged in, created as `DRAFT` |
+| PATCH | `/templates/:id` | author or ADMIN, body must include current `version` |
+| POST | `/templates/:id/publish`, `/templates/:id/archive` | author or ADMIN |
+| DELETE | `/templates/:id` | author or ADMIN |
 | GET | `/agents`, `/agents/:id` | public (X marketplace PoC) |
+
+## Business rules
+
+- Template `templateUrl` must be a `grokbot://` or `https://` link.
+- Publishing needs a description of at least 20 characters; a published template cannot be edited below that.
+- Template updates use optimistic locking: `PATCH` with an outdated `version` → 409.
+- A template with installations cannot be deleted, only archived (409).
+- A category with templates cannot be deleted (409).
+- An admin cannot change their own role (422).
 
 - `GET /agents?page=1&limit=20&q=&author=` → `{ items, page, limit, total }` (`limit` max 100)
 - `GET /agents/:id` → `Agent` or 404
