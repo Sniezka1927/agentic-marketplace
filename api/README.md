@@ -3,12 +3,24 @@
 Bun + ElysiaJS REST API with PostgreSQL. Everything runs in Docker.
 
 ```bash
-cp .env.example .env   # optional, defaults match
+cp .env.example .env   # set passwords
 docker compose up --build
 ```
 
 - API: http://localhost:3001
-- Postgres: localhost:5432 (`DATABASE_URL` is passed to the API container)
+- Postgres: localhost:5432
+
+On start the API container runs migrations, then the seed (categories + admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`), then the server.
+
+## Database
+
+Drizzle ORM on `Bun.sql`. Schema: `src/db/schema.ts`, migrations: `drizzle/`.
+
+```bash
+bun run db:generate   # new migration after schema change
+bun run db:migrate
+bun run db:seed
+```
 
 ## Endpoints
 
@@ -25,6 +37,9 @@ Local dev without Docker for the API:
 
 ```bash
 bun install
-docker compose up db
-DATABASE_URL=postgres://marketplace:marketplace@localhost:5432/marketplace bun run dev
+docker compose up -d db
+bun run db:migrate && bun run db:seed
+bun run dev
 ```
+
+`DATABASE_URL` from `.env` points to `localhost`.
