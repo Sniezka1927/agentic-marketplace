@@ -6,6 +6,7 @@ import { useCategoryMutations } from "@/lib/manage-queries";
 import { useCategories } from "@/lib/queries";
 import type { Category } from "@/lib/types";
 import { ConfirmButton } from "../confirm-button";
+import { MutationError } from "../mutation-error";
 import { Button, ErrorBox, Input, Spinner } from "../ui";
 
 function CategoryRow({ category }: { category: Category }) {
@@ -25,6 +26,9 @@ function CategoryRow({ category }: { category: Category }) {
   if (editing) {
     return (
       <form onSubmit={save} className="grid gap-2 py-3 md:grid-cols-[1fr_2fr_auto]">
+        <div className="md:col-span-3">
+          <MutationError error={update.error} />
+        </div>
         <Input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
         <div className="flex gap-2">
@@ -40,24 +44,27 @@ function CategoryRow({ category }: { category: Category }) {
   }
 
   return (
-    <div className="flex items-center gap-3 py-3">
-      <div className="flex-1">
-        <p className="font-medium">{category.name}</p>
-        <p className="text-xs text-zinc-500">
-          /{category.slug}
-          {category.description && ` · ${category.description}`}
-        </p>
+    <div className="flex flex-col gap-2 py-3">
+      <MutationError error={remove.error} />
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <p className="font-medium">{category.name}</p>
+          <p className="text-xs text-zinc-500">
+            /{category.slug}
+            {category.description && ` · ${category.description}`}
+          </p>
+        </div>
+        <Button variant="ghost" onClick={() => setEditing(true)}>
+          Edit
+        </Button>
+        <ConfirmButton
+          disabled={remove.isPending}
+          confirmLabel="Delete?"
+          onConfirm={() => remove.mutate(category.id)}
+        >
+          Delete
+        </ConfirmButton>
       </div>
-      <Button variant="ghost" onClick={() => setEditing(true)}>
-        Edit
-      </Button>
-      <ConfirmButton
-        disabled={remove.isPending}
-        confirmLabel="Delete?"
-        onConfirm={() => remove.mutate(category.id)}
-      >
-        Delete
-      </ConfirmButton>
     </div>
   );
 }
@@ -83,6 +90,7 @@ export function CategoriesAdmin() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MutationError error={create.error} />
       <form onSubmit={submit} className="grid gap-2 md:grid-cols-[1fr_2fr_auto]">
         <Input
           placeholder="New category name"

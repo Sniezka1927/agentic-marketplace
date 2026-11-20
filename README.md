@@ -10,7 +10,7 @@ A marketplace of agent templates for Grok Bot. Users list bots from x.ai by past
 | Database | PostgreSQL 17, [Drizzle ORM](https://orm.drizzle.team) on `Bun.sql`, drizzle-kit migrations |
 | Auth | JWT (HS256, `jose`), passwords hashed with `Bun.password` (argon2id) |
 | API docs | OpenAPI 3.1 via `@elysiajs/openapi` (Scalar UI at `/docs`) |
-| Frontend | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query, sonner |
+| Frontend | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query |
 | Infrastructure | Docker Compose (`db` + `api`), GitHub Actions CI |
 | Tests | `bun test`: unit tests (services with fake repositories) and integration tests (HTTP → DB) |
 
@@ -78,7 +78,7 @@ All configuration comes from environment variables (`api/.env`, `app/.env.local`
 
 - **Accounts and roles:** registration, login, JWT bearer auth. `USER` and `ADMIN` roles; admins can promote or demote other users.
 - **Templates:** create a draft from an x.ai bot link, edit, publish, archive and delete. The catalog has search, a category filter, sorting (newest, most installed, top rated, name) and pagination. Drafts are visible only to the author and admins.
-- **Installations:** "Install in Grok Bot" records the installation and opens `grokbot://app/v1/bot-template?id=<id>`; uninstall; "Installed" page.
+- **Installations:** "Install in Grok Bot" records the installation and opens `grokbot://app/v1/bot-template?id=<id>`; uninstall.
 - **Reviews:** 1–5 star rating with a comment. Authors can edit their own reviews; authors and admins can delete them.
 - **Statistics:** install count and average rating are recalculated asynchronously by event handlers.
 - **x.ai integration:** templates are linked to x.ai bots; the link is validated and the bot id is turned into the x.ai page link and the Grok Bot install deeplink.

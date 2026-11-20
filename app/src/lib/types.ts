@@ -49,8 +49,6 @@ export type Installation = {
   installedAt: string;
 };
 
-export type InstallationWithTemplate = Installation & { template: Template };
-
 export type Review = {
   id: string;
   templateId: string;

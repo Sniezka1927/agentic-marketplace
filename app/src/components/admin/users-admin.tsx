@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import { useChangeRole, useUsers } from "@/lib/manage-queries";
 import type { Role } from "@/lib/types";
 import { useAuth } from "../auth-provider";
+import { MutationError } from "../mutation-error";
 import { Pagination } from "../pagination";
 import { Button, ErrorBox, Input, Select, Spinner } from "../ui";
 
@@ -25,6 +26,7 @@ export function UsersAdmin() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MutationError error={changeRole.error} />
       <form onSubmit={submit} className="flex gap-2">
         <Input
           placeholder="Search by email or name"
