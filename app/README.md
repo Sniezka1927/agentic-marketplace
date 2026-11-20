@@ -10,6 +10,18 @@ bun run dev                  # http://localhost:3000
 
 The API must be running (see `../api/README.md`).
 
+## Pages
+
+| Route | Access | What it does |
+|---|---|---|
+| `/templates` | public | catalog: search, category/source filter, sort, pagination (state in URL) |
+| `/templates/[id]` | public | details, install/uninstall, reviews (add, edit own, delete own or as admin) |
+| `/installations` | logged in | installed templates |
+| `/my/templates` | logged in | own templates in any status |
+| `/my/templates/new`, `/my/templates/[id]` | author or admin | create, edit (version conflict → reload prompt), publish, archive, delete |
+| `/admin` | admin | categories CRUD, user roles, X marketplace sync and run history |
+| `/login`, `/register` | public | auth |
+
 ## Structure
 
 ```
