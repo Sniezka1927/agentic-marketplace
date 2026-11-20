@@ -49,7 +49,23 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cx(fieldClass, className)} {...props} />;
+  return (
+    <span className={cx("relative block", className)}>
+      <select className={cx(fieldClass, "cursor-pointer appearance-none pr-9")} {...props} />
+      <svg
+        aria-hidden
+        viewBox="0 0 16 16"
+        className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="m4 6 4 4 4-4" />
+      </svg>
+    </span>
+  );
 }
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
