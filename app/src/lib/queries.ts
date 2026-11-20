@@ -11,7 +11,6 @@ import type {
   Review,
   Template,
   TemplateSort,
-  TemplateSource,
 } from "./types";
 
 export type TemplateListParams = {
@@ -19,7 +18,6 @@ export type TemplateListParams = {
   limit?: number;
   q?: string;
   categoryId?: string;
-  source?: TemplateSource;
   sort?: TemplateSort;
 };
 

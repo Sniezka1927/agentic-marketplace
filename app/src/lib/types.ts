@@ -22,18 +22,17 @@ export type Category = {
 };
 
 export type TemplateStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-export type TemplateSource = "LOCAL" | "X";
 export type TemplateSort = "newest" | "popular" | "rating" | "name";
 
 export type Template = {
   id: string;
   name: string;
   description: string;
-  templateUrl: string;
+  botId: string;
+  xUrl: string;
+  installUrl: string;
   status: TemplateStatus;
-  source: TemplateSource;
   author: { id: string; displayName: string } | null;
-  externalAuthor: string | null;
   category: { id: string; name: string; slug: string };
   version: number;
   installsCount: number;
@@ -60,14 +59,4 @@ export type Review = {
   user: { id: string; displayName: string };
   createdAt: string;
   updatedAt: string;
-};
-
-export type SyncRun = {
-  id: string;
-  status: "RUNNING" | "SUCCESS" | "FAILED";
-  imported: number;
-  error: string | null;
-  triggeredById: string | null;
-  startedAt: string;
-  finishedAt: string | null;
 };

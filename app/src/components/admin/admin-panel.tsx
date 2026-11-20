@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { Button, Card, PageTitle } from "../ui";
 import { CategoriesAdmin } from "./categories-admin";
-import { SyncAdmin } from "./sync-admin";
 import { UsersAdmin } from "./users-admin";
 
 const TABS = [
   { id: "categories", label: "Categories", Component: CategoriesAdmin },
   { id: "users", label: "Users", Component: UsersAdmin },
-  { id: "sync", label: "X marketplace sync", Component: SyncAdmin },
 ] as const;
 
 export function AdminPanel() {

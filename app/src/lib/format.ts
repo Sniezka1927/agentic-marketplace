@@ -1,7 +1,7 @@
 import type { Template } from "./types";
 
 export const authorName = (template: Template) =>
-  template.author?.displayName ?? template.externalAuthor ?? "Unknown";
+  template.author?.displayName ?? "Unknown";
 
 export const formatDate = (value: string | null) =>
   value

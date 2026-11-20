@@ -13,7 +13,6 @@ export function TemplateCard({ template }: { template: Template }) {
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-semibold leading-tight">{template.name}</h2>
         <div className="flex shrink-0 gap-1">
-          {template.source === "X" && <Badge>X</Badge>}
           {template.status !== "PUBLISHED" && <Badge tone="muted">{template.status}</Badge>}
         </div>
       </div>
