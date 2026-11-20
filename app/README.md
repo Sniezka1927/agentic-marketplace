@@ -14,6 +14,7 @@ The API must be running (see `../api/README.md`).
 
 | Route | Access | What it does |
 |---|---|---|
+| `/` | public | redirects to `/templates` |
 | `/templates` | public | catalog: search, category filter, sort, pagination (state in URL) |
 | `/templates/[id]` | public; drafts for author or admin | details, install (records the install and opens the `grokbot://` deeplink, same as "Add to Grok Bot" on x.ai), link to the x.ai page, reviews; author or admin also edit (version conflict → reload prompt), publish, archive, delete |
 | `/installations` | logged in | installed templates |
