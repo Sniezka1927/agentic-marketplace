@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { categories, installations } from "../../src/db/schema";
+import { categories, installations, templates } from "../../src/db/schema";
 import { call, createTestApp, createUser, db, resetDb } from "../helpers";
 
 const app = createTestApp();
@@ -94,6 +94,26 @@ describe("/templates", () => {
       await call(app, "GET", `/templates?categoryId=${otherCategoryId}`)
     ).json();
     expect(byCategory.items.map((t: { id: string }) => t.id)).toEqual([b.id]);
+  });
+
+  it("lists templates from every source and own templates in every status by default", async () => {
+    const local = (await createTemplate({ name: "Local" })).body;
+    await publish(local.id);
+    await createTemplate({ name: "Draft" });
+    await db.insert(templates).values({
+      name: "Imported",
+      templateUrl: "grokbot://app/v1/bot-template?id=x",
+      categoryId,
+      source: "X",
+      externalId: "x",
+      status: "PUBLISHED",
+    });
+
+    const all = await (await call(app, "GET", "/templates")).json();
+    expect(all.total).toBe(2);
+
+    const mine = await (await call(app, "GET", "/templates/mine", { token: author.token })).json();
+    expect(mine.total).toBe(2);
   });
 
   it("lists own templates in any status", async () => {
