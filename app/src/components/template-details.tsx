@@ -9,6 +9,7 @@ import { useAuth } from "./auth-provider";
 import { Badge } from "./badge";
 import { Stars } from "./rating";
 import { Reviews } from "./reviews";
+import { TemplateManage } from "./template-manage";
 import { Button, Card, ErrorBox, Spinner } from "./ui";
 
 export function TemplateDetails() {
@@ -33,8 +34,11 @@ export function TemplateDetails() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3">
-        <Link href="/templates" className="text-sm text-zinc-500 hover:underline">
-          ← All templates
+        <Link
+          href={canManage ? "/my/templates" : "/templates"}
+          className="text-sm text-zinc-500 hover:underline"
+        >
+          {canManage ? "← My templates" : "← All templates"}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">{t.name}</h1>
@@ -77,13 +81,10 @@ export function TemplateDetails() {
               Open in Grok Bot
             </a>
           )}
-          {canManage && (
-            <Link href={`/my/templates/${t.id}`} className="text-center text-sm text-zinc-500 hover:underline">
-              Manage template
-            </Link>
-          )}
         </Card>
       </div>
+
+      {canManage && <TemplateManage template={t} onReload={template.refetch} />}
 
       <Reviews template={t} installed={installed} />
     </div>

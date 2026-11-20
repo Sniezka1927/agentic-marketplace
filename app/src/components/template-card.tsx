@@ -4,10 +4,10 @@ import type { Template } from "@/lib/types";
 import { Stars } from "./rating";
 import { Badge } from "./badge";
 
-export function TemplateCard({ template, href }: { template: Template; href?: string }) {
+export function TemplateCard({ template }: { template: Template }) {
   return (
     <Link
-      href={href ?? `/templates/${template.id}`}
+      href={`/templates/${template.id}`}
       className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-5 transition-colors hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
     >
       <div className="flex items-start justify-between gap-3">
