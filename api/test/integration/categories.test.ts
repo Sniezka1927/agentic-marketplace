@@ -69,7 +69,7 @@ describe("/categories", () => {
       .returning();
     await db.insert(templates).values({
       name: "Bot",
-      templateUrl: "grokbot://app/v1/bot-template?id=1",
+      externalId: "bot-1",
       categoryId: category!.id,
     });
     const res = await call(app, "DELETE", `/categories/${category!.id}`, {

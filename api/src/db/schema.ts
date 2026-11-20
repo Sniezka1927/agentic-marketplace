@@ -20,12 +20,6 @@ export const templateStatus = pgEnum("template_status", [
   "PUBLISHED",
   "ARCHIVED",
 ]);
-export const templateSource = pgEnum("template_source", ["LOCAL", "X"]);
-export const syncStatus = pgEnum("sync_status", [
-  "RUNNING",
-  "SUCCESS",
-  "FAILED",
-]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -60,11 +54,8 @@ export const templates = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 120 }).notNull(),
     description: text("description").notNull().default(""),
-    templateUrl: text("template_url").notNull(),
     status: templateStatus("status").notNull().default("DRAFT"),
-    source: templateSource("source").notNull().default("LOCAL"),
-    externalId: varchar("external_id", { length: 100 }),
-    externalAuthor: varchar("external_author", { length: 100 }),
+    externalId: varchar("external_id", { length: 100 }).notNull(),
     authorId: uuid("author_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -79,7 +70,7 @@ export const templates = pgTable(
     ...timestamps,
   },
   (t) => [
-    unique("templates_source_external_id_unique").on(t.source, t.externalId),
+    unique("templates_external_id_unique").on(t.externalId),
     index("templates_status_idx").on(t.status),
     index("templates_category_idx").on(t.categoryId),
     index("templates_author_idx").on(t.authorId),
@@ -127,20 +118,6 @@ export const reviews = pgTable(
   ],
 );
 
-export const syncRuns = pgTable("sync_runs", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  status: syncStatus("status").notNull().default("RUNNING"),
-  imported: integer("imported").notNull().default(0),
-  error: text("error"),
-  triggeredById: uuid("triggered_by_id").references(() => users.id, {
-    onDelete: "set null",
-  }),
-  startedAt: timestamp("started_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  finishedAt: timestamp("finished_at", { withTimezone: true }),
-});
-
 export const usersRelations = relations(users, ({ many }) => ({
   templates: many(templates),
   installations: many(installations),
@@ -180,12 +157,5 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   template: one(templates, {
     fields: [reviews.templateId],
     references: [templates.id],
-  }),
-}));
-
-export const syncRunsRelations = relations(syncRuns, ({ one }) => ({
-  triggeredBy: one(users, {
-    fields: [syncRuns.triggeredById],
-    references: [users.id],
   }),
 }));

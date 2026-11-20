@@ -1,25 +1,25 @@
 import { t, type Static } from "elysia";
 import { PaginationQuery } from "../../common/pagination";
+import { X_BOT_URL_PATTERN, grokBotInstallUrl, xBotPageUrl } from "../../x/bot-link";
 import type { TemplateDetails } from "./template.repository";
 
 export const TemplateStatusSchema = t.UnionEnum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
-export const TemplateSourceSchema = t.UnionEnum(["LOCAL", "X"]);
 
-const TemplateUrl = t.String({
-  pattern: "^(grokbot|https)://\\S+$",
-  maxLength: 2048,
-  description: "grokbot:// install link or https:// URL",
+const XBotUrl = t.String({
+  pattern: X_BOT_URL_PATTERN,
+  maxLength: 300,
+  description: "Link to the bot on x.ai, e.g. https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN",
 });
 
 export const TemplateDto = t.Object({
   id: t.String({ format: "uuid" }),
   name: t.String(),
   description: t.String(),
-  templateUrl: t.String(),
+  botId: t.String(),
+  xUrl: t.String({ description: "Bot page on x.ai" }),
+  installUrl: t.String({ description: "Grok Bot deeplink, same as Add to Grok Bot on x.ai" }),
   status: TemplateStatusSchema,
-  source: TemplateSourceSchema,
   author: t.Nullable(t.Object({ id: t.String(), displayName: t.String() })),
-  externalAuthor: t.Nullable(t.String()),
   category: t.Object({ id: t.String(), name: t.String(), slug: t.String() }),
   version: t.Integer(),
   installsCount: t.Integer(),
@@ -33,7 +33,7 @@ export const TemplateDto = t.Object({
 export const CreateTemplateBody = t.Object({
   name: t.String({ minLength: 3, maxLength: 120 }),
   description: t.Optional(t.String({ maxLength: 5000 })),
-  templateUrl: TemplateUrl,
+  xUrl: XBotUrl,
   categoryId: t.String({ format: "uuid" }),
 });
 
@@ -48,7 +48,6 @@ const literals = <T extends string>(values: readonly T[]) =>
 const filters = {
   q: t.Optional(t.String({ maxLength: 100 })),
   categoryId: t.Optional(t.String({ format: "uuid" })),
-  source: t.Optional(literals(["LOCAL", "X"] as const)),
   sort: t.Optional(literals(["newest", "popular", "rating", "name"] as const)),
 };
 
@@ -66,11 +65,11 @@ export const toTemplateDto = (template: TemplateDetails): Static<typeof Template
   id: template.id,
   name: template.name,
   description: template.description,
-  templateUrl: template.templateUrl,
+  botId: template.externalId,
+  xUrl: xBotPageUrl(template.externalId),
+  installUrl: grokBotInstallUrl(template.externalId),
   status: template.status,
-  source: template.source,
   author: template.author,
-  externalAuthor: template.externalAuthor,
   category: {
     id: template.category.id,
     name: template.category.name,

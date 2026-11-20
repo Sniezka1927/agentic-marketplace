@@ -8,8 +8,8 @@ export default function Home() {
         Find, share and install agent templates for Grok Bot
       </h1>
       <p className="max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
-        Browse templates published by the community and the X marketplace, install them in
-        one click, and publish your own.
+        List a bot from x.ai by pasting its link, browse what others shared, and install any
+        template straight into Grok Bot.
       </p>
       <div className="flex gap-3">
         <Link href="/templates">

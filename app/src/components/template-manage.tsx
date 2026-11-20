@@ -78,7 +78,7 @@ export function TemplateManage({
           initial={{
             name: template.name,
             description: template.description,
-            templateUrl: template.templateUrl,
+            xUrl: template.xUrl,
             categoryId: template.category.id,
           }}
           submitLabel="Save changes"

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { categories, installations, templates } from "../../src/db/schema";
+import { categories, installations } from "../../src/db/schema";
 import { call, createTestApp, createUser, db, resetDb } from "../helpers";
 
 const app = createTestApp();
@@ -33,7 +33,7 @@ const createTemplate = async (
     body: {
       name: "File Sorter",
       description,
-      templateUrl: "grokbot://app/v1/bot-template?id=abc",
+      xUrl: `https://x.ai/bot/${crypto.randomUUID()}`,
       categoryId,
       ...overrides,
     },
@@ -59,8 +59,9 @@ describe("/templates", () => {
     expect(anonymous.status).toBe(401);
   });
 
-  it("validates template url and category", async () => {
-    expect((await createTemplate({ templateUrl: "ftp://nope" })).res.status).toBe(422);
+  it("validates x.ai link and category", async () => {
+    expect((await createTemplate({ xUrl: "https://example.com/bot/abc" })).res.status).toBe(422);
+    expect((await createTemplate({ xUrl: "https://x.ai/bots/abc" })).res.status).toBe(422);
     expect((await createTemplate({ categoryId: crypto.randomUUID() })).res.status).toBe(422);
   });
 
@@ -96,24 +97,37 @@ describe("/templates", () => {
     expect(byCategory.items.map((t: { id: string }) => t.id)).toEqual([b.id]);
   });
 
-  it("lists templates from every source and own templates in every status by default", async () => {
-    const local = (await createTemplate({ name: "Local" })).body;
-    await publish(local.id);
+  it("lists own templates in every status by default", async () => {
+    const published = (await createTemplate({ name: "Published" })).body;
+    await publish(published.id);
     await createTemplate({ name: "Draft" });
-    await db.insert(templates).values({
-      name: "Imported",
-      templateUrl: "grokbot://app/v1/bot-template?id=x",
-      categoryId,
-      source: "X",
-      externalId: "x",
-      status: "PUBLISHED",
-    });
 
     const all = await (await call(app, "GET", "/templates")).json();
-    expect(all.total).toBe(2);
+    expect(all.total).toBe(1);
 
     const mine = await (await call(app, "GET", "/templates/mine", { token: author.token })).json();
     expect(mine.total).toBe(2);
+  });
+
+  it("derives x.ai page and Grok Bot install links from the bot link", async () => {
+    const { res, body } = await createTemplate({
+      xUrl: "https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN?ref=share",
+    });
+    expect(res.status).toBe(201);
+    expect(body).toMatchObject({
+      botId: "SeMqhg9bPD4Qd_8i7I-vN",
+      xUrl: "https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN",
+      installUrl: "grokbot://app/v1/bot-template?id=SeMqhg9bPD4Qd_8i7I-vN",
+    });
+  });
+
+  it("rejects listing the same x.ai bot twice", async () => {
+    const xUrl = "https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN";
+    await createTemplate({ xUrl });
+    const other = await createUser(app, "USER");
+    const res = await createTemplate({ xUrl: `${xUrl}/` }, other.token);
+    expect(res.res.status).toBe(409);
+    expect(res.body.error.message).toContain("already listed");
   });
 
   it("lists own templates in any status", async () => {

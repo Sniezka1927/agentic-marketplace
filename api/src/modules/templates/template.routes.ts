@@ -37,7 +37,7 @@ export const templateRoutes = (service: TemplateService, guard: AuthGuard) =>
       {
         query: TemplateListQuery,
         response: { 200: Paginated(TemplateDto), 422: ErrorResponse },
-        detail: { summary: "List published templates (search, filter, sort, paginate)" },
+        detail: { summary: "List published templates (search, filter by category, sort, paginate)" },
       },
     )
     .get(

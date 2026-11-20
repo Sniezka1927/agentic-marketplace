@@ -8,7 +8,6 @@ import type {
   Category,
   Page,
   Role,
-  SyncRun,
   Template,
   TemplateStatus,
   User,
@@ -17,7 +16,7 @@ import type {
 export type TemplateInput = {
   name: string;
   description: string;
-  templateUrl: string;
+  xUrl: string;
   categoryId: string;
 };
 
@@ -118,27 +117,6 @@ export const useChangeRole = () => {
     onSuccess: (user) => {
       toast.success(`${user.displayName} is now ${user.role}`);
       queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    onError,
-  });
-};
-
-export const useSyncRuns = (page: number) =>
-  useQuery({
-    queryKey: ["sync", "runs", page],
-    queryFn: () => api<Page<SyncRun>>("/sync/runs", { query: { page, limit: 10 } }),
-    refetchInterval: (query) =>
-      query.state.data?.items.some((run) => run.status === "RUNNING") ? 1000 : false,
-  });
-
-export const useStartSync = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => api<SyncRun>("/sync/x", { method: "POST" }),
-    onSuccess: () => {
-      toast.success("Synchronization started");
-      queryClient.invalidateQueries({ queryKey: ["sync"] });
-      queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
     onError,
   });

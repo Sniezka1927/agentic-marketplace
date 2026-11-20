@@ -42,7 +42,6 @@ export function TemplateDetails() {
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">{t.name}</h1>
-          {t.source === "X" && <Badge>X marketplace</Badge>}
           {t.status !== "PUBLISHED" && <Badge tone="muted">{t.status}</Badge>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-500">
@@ -64,9 +63,15 @@ export function TemplateDetails() {
               <Button
                 variant={installed ? "secondary" : "primary"}
                 disabled={toggle.isPending || installation.isPending}
-                onClick={() => toggle.mutate(installed)}
+                onClick={() =>
+                  toggle.mutate(installed, {
+                    onSuccess: () => {
+                      if (!installed) window.location.href = t.installUrl;
+                    },
+                  })
+                }
               >
-                {installed ? "Uninstall" : "Install"}
+                {installed ? "Uninstall" : "Install in Grok Bot"}
               </Button>
             ) : (
               <p className="text-sm text-zinc-500">Only published templates can be installed.</p>
@@ -77,10 +82,18 @@ export function TemplateDetails() {
             </Link>
           )}
           {installed && (
-            <a href={t.templateUrl} className="text-center text-sm font-medium underline">
+            <a href={t.installUrl} className="text-center text-sm font-medium underline">
               Open in Grok Bot
             </a>
           )}
+          <a
+            href={t.xUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-center text-sm text-zinc-500 hover:underline"
+          >
+            View on x.ai
+          </a>
         </Card>
       </div>
 

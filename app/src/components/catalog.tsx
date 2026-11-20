@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { errorMessage } from "@/lib/api";
 import { useCategories, useTemplates } from "@/lib/queries";
-import type { TemplateSort, TemplateSource } from "@/lib/types";
+import type { TemplateSort } from "@/lib/types";
 import { Pagination } from "./pagination";
 import { TemplateCard } from "./template-card";
 import { Button, ErrorBox, Input, PageTitle, Select, Spinner } from "./ui";
@@ -25,7 +25,6 @@ export function Catalog() {
 
   const q = searchParams.get("q") ?? "";
   const categoryId = searchParams.get("categoryId") ?? "";
-  const source = (searchParams.get("source") ?? "") as TemplateSource | "";
   const sort = (searchParams.get("sort") ?? "newest") as TemplateSort;
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
@@ -36,7 +35,6 @@ export function Catalog() {
     limit: LIMIT,
     q: q || undefined,
     categoryId: categoryId || undefined,
-    source: source || undefined,
     sort,
   });
 
@@ -59,7 +57,7 @@ export function Catalog() {
   return (
     <>
       <PageTitle>Templates</PageTitle>
-      <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+      <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto]">
         <form onSubmit={onSearch} className="flex gap-2">
           <Input
             placeholder="Search by name or description"
@@ -82,15 +80,6 @@ export function Catalog() {
               {category.name}
             </option>
           ))}
-        </Select>
-        <Select
-          value={source}
-          onChange={(e) => update({ source: e.target.value })}
-          aria-label="Source"
-        >
-          <option value="">All sources</option>
-          <option value="LOCAL">Community</option>
-          <option value="X">X marketplace</option>
         </Select>
         <Select value={sort} onChange={(e) => update({ sort: e.target.value })} aria-label="Sort">
           {SORTS.map((option) => (
