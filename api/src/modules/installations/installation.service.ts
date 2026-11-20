@@ -1,11 +1,13 @@
 import { BusinessRuleError, ConflictError, NotFoundError } from "../../common/errors";
 import type { PageRequest } from "../../common/pagination";
+import type { EventPublisher } from "../../events/event-bus";
 import type { TemplateRepository } from "../templates/template.repository";
 import type { InstallationRepository } from "./installation.repository";
 
 export const createInstallationService = (
   installations: InstallationRepository,
   templates: TemplateRepository,
+  events: EventPublisher,
 ) => ({
   async install(userId: string, templateId: string) {
     const template = await templates.findById(templateId);
@@ -16,7 +18,9 @@ export const createInstallationService = (
     if (await installations.find(userId, templateId)) {
       throw new ConflictError("Template is already installed");
     }
-    return installations.create(userId, templateId);
+    const installation = await installations.create(userId, templateId);
+    events.publish("template.installed", { templateId, userId });
+    return installation;
   },
 
   async uninstall(userId: string, templateId: string) {
@@ -24,6 +28,7 @@ export const createInstallationService = (
       throw new NotFoundError("Template is not installed");
     }
     await installations.delete(userId, templateId);
+    events.publish("template.uninstalled", { templateId, userId });
   },
 
   listOwn: (userId: string, page: PageRequest) => installations.listByUser(userId, page),

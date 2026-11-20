@@ -5,6 +5,7 @@ import {
   NotFoundError,
 } from "../../common/errors";
 import type { PageRequest } from "../../common/pagination";
+import type { EventPublisher } from "../../events/event-bus";
 import type { InstallationRepository } from "../installations/installation.repository";
 import type { TemplateRepository } from "../templates/template.repository";
 import { canManage } from "../templates/template.service";
@@ -19,6 +20,7 @@ export const createReviewService = (
   reviews: ReviewRepository,
   installations: InstallationRepository,
   templates: TemplateRepository,
+  events: EventPublisher,
 ) => {
   const findOwnedReview = async (viewer: Viewer, reviewId: string, allowAdmin: boolean) => {
     const review = await reviews.findById(reviewId);
@@ -53,25 +55,30 @@ export const createReviewService = (
       if (await reviews.findByUserAndTemplate(viewer.id, templateId)) {
         throw new ConflictError("You have already reviewed this template");
       }
-      return reviews.create({
+      const review = await reviews.create({
         userId: viewer.id,
         templateId,
         rating: input.rating,
         comment: input.comment?.trim() ?? "",
       });
+      events.publish("review.created", { templateId, reviewId: review.id });
+      return review;
     },
 
     async update(viewer: Viewer, reviewId: string, input: ReviewChanges) {
       await findOwnedReview(viewer, reviewId, false);
-      return reviews.update(reviewId, {
+      const review = await reviews.update(reviewId, {
         rating: input.rating,
         comment: input.comment?.trim(),
       });
+      events.publish("review.updated", { templateId: review.templateId, reviewId });
+      return review;
     },
 
     async remove(viewer: Viewer, reviewId: string) {
       const review = await findOwnedReview(viewer, reviewId, true);
       await reviews.delete(review.id);
+      events.publish("review.deleted", { templateId: review.templateId, reviewId });
       return review;
     },
   };
