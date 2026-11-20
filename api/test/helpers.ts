@@ -8,7 +8,10 @@ export { db };
 
 export type TestApp = ReturnType<typeof createTestApp>;
 
-export const createTestApp = () => createApp(createContainer(db));
+export const createTestApp = () => {
+  const container = createContainer(db);
+  return Object.assign(createApp(container), { events: container.events });
+};
 
 export const resetDb = () =>
   db.execute(
