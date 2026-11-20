@@ -31,8 +31,10 @@ src/
   lib/api.ts      fetch wrapper: base URL, bearer token, ApiError from { error: { code, message, details } }
   lib/token-store JWT in localStorage, shared across tabs
   lib/types.ts    API response types
+  vendor/bloub/   avatar engine from jeremy-prt/bloub (MIT), see its README
 ```
 
 - Auth: the token from `/auth/login` or `/auth/register` is kept in `localStorage`; the current user comes from `/auth/me`. A 401 clears the token.
 - Data fetching: TanStack Query; API errors are shown inline or as toasts (`sonner`).
+- Bot avatars: `components/bot-avatar.tsx` renders the vendored bloub engine (x.ai-style bot avatar); shape, colour and expression are derived from the bot id, the template page shows it animated.
 - Pages that need a user are wrapped in `RequireAuth` (redirects to `/login?next=...`, checks role).
