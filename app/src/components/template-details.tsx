@@ -42,7 +42,7 @@ export function TemplateDetails() {
           {canManage ? "← My templates" : "← All templates"}
         </Link>
         <div className="flex flex-wrap items-center gap-4">
-          <BotAvatar botId={t.botId} size={140} blobs />
+          <BotAvatar botId={t.botId} size={96} animated blobs />
           <h1 className="text-3xl font-semibold tracking-tight">{t.name}</h1>
           {t.status !== "PUBLISHED" && <Badge tone="muted">{t.status}</Badge>}
         </div>
