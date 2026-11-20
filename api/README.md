@@ -79,7 +79,7 @@ bun test
 | PATCH | `/templates/:id` | author or ADMIN, body must include current `version` |
 | POST | `/templates/:id/publish`, `/templates/:id/archive` | author or ADMIN |
 | DELETE | `/templates/:id` | author or ADMIN |
-| POST, DELETE | `/templates/:id/install` | logged in |
+| GET, POST, DELETE | `/templates/:id/install` | logged in (GET → own installation or 404) |
 | GET | `/installations/mine?page&limit` | logged in |
 | GET | `/templates/:id/reviews?page&limit` | public |
 | POST | `/templates/:id/reviews` | logged in |

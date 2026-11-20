@@ -12,8 +12,11 @@ export default function Home() {
         one click, and publish your own.
       </p>
       <div className="flex gap-3">
+        <Link href="/templates">
+          <Button>Browse templates</Button>
+        </Link>
         <Link href="/register">
-          <Button>Get started</Button>
+          <Button variant="secondary">Create account</Button>
         </Link>
       </div>
     </section>

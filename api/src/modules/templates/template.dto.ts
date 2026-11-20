@@ -4,7 +4,6 @@ import type { TemplateDetails } from "./template.repository";
 
 export const TemplateStatusSchema = t.UnionEnum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const TemplateSourceSchema = t.UnionEnum(["LOCAL", "X"]);
-export const TemplateSortSchema = t.UnionEnum(["newest", "popular", "rating", "name"]);
 
 const TemplateUrl = t.String({
   pattern: "^(grokbot|https)://\\S+$",
@@ -43,18 +42,24 @@ export const UpdateTemplateBody = t.Composite([
   t.Object({ version: t.Integer({ minimum: 1 }) }),
 ]);
 
+const literals = <T extends string>(values: readonly T[]) =>
+  t.Union(values.map((value) => t.Literal(value)));
+
 const filters = {
   q: t.Optional(t.String({ maxLength: 100 })),
   categoryId: t.Optional(t.String({ format: "uuid" })),
-  source: t.Optional(TemplateSourceSchema),
-  sort: t.Optional(TemplateSortSchema),
+  source: t.Optional(literals(["LOCAL", "X"] as const)),
+  sort: t.Optional(literals(["newest", "popular", "rating", "name"] as const)),
 };
 
 export const TemplateListQuery = t.Composite([PaginationQuery, t.Object(filters)]);
 
 export const OwnTemplateListQuery = t.Composite([
   PaginationQuery,
-  t.Object({ ...filters, status: t.Optional(TemplateStatusSchema) }),
+  t.Object({
+    ...filters,
+    status: t.Optional(literals(["DRAFT", "PUBLISHED", "ARCHIVED"] as const)),
+  }),
 ]);
 
 export const toTemplateDto = (template: TemplateDetails): Static<typeof TemplateDto> => ({
