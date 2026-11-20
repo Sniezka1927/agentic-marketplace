@@ -8,15 +8,20 @@ export { db };
 
 export type TestApp = ReturnType<typeof createTestApp>;
 
+const eventBuses = new Set<ReturnType<typeof createContainer>["events"]>();
+
 export const createTestApp = () => {
   const container = createContainer(db);
+  eventBuses.add(container.events);
   return Object.assign(createApp(container), { events: container.events });
 };
 
-export const resetDb = () =>
-  db.execute(
+export const resetDb = async () => {
+  await Promise.all([...eventBuses].map((events) => events.drain()));
+  await db.execute(
     sql`truncate table reviews, installations, templates, categories, users restart identity cascade`,
   );
+};
 
 export const call = (
   app: TestApp,
