@@ -15,10 +15,10 @@ The API must be running (see `../api/README.md`).
 | Route | Access | What it does |
 |---|---|---|
 | `/templates` | public | catalog: search, category/source filter, sort, pagination (state in URL) |
-| `/templates/[id]` | public | details, install/uninstall, reviews (add, edit own, delete own or as admin) |
+| `/templates/[id]` | public; drafts for author or admin | details, install/uninstall, reviews; author or admin also edit (version conflict → reload prompt), publish, archive, delete |
 | `/installations` | logged in | installed templates |
 | `/my/templates` | logged in | own templates in any status |
-| `/my/templates/new`, `/my/templates/[id]` | author or admin | create, edit (version conflict → reload prompt), publish, archive, delete |
+| `/my/templates/new` | logged in | create a draft |
 | `/admin` | admin | categories CRUD, user roles, X marketplace sync and run history |
 | `/login`, `/register` | public | auth |
 

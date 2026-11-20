@@ -18,7 +18,7 @@ export function NewTemplate() {
           pending={create.isPending}
           onSubmit={(input) =>
             create.mutate(input, {
-              onSuccess: (template) => router.push(`/my/templates/${template.id}`),
+              onSuccess: (template) => router.push(`/templates/${template.id}`),
             })
           }
         />

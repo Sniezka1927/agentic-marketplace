@@ -52,11 +52,7 @@ export function MyTemplates() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {templates.data.items.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                href={`/my/templates/${template.id}`}
-              />
+              <TemplateCard key={template.id} template={template} />
             ))}
           </div>
           <Pagination
