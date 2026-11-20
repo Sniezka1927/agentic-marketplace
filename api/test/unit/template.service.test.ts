@@ -84,6 +84,7 @@ const createFakes = () => {
       rows.delete(id);
     },
     countInstallations: async (id) => installs.get(id) ?? 0,
+    upsertExternal: async () => {},
     refreshInstallStats: async () => {},
     refreshRatingStats: async () => {},
   };
