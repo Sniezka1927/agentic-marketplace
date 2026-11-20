@@ -10,10 +10,4 @@ export const config = {
     email: process.env.ADMIN_EMAIL ?? "",
     password: process.env.ADMIN_PASSWORD ?? "",
   },
-  xMarketplace: {
-    url: process.env.X_MARKETPLACE_URL ?? "",
-    token: process.env.X_MARKETPLACE_TOKEN ?? "",
-    syncIntervalMinutes: Number(process.env.X_SYNC_INTERVAL_MINUTES ?? 60),
-    importCategorySlug: process.env.X_IMPORT_CATEGORY_SLUG ?? "other",
-  },
 };
