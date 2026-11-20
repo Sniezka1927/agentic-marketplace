@@ -135,3 +135,56 @@ describe("reviews", () => {
     expect(res.status).toBe(409);
   });
 });
+
+describe("template stats (async event handlers)", () => {
+  const stats = async () => {
+    const res = await call(app, "GET", `/templates/${templateId}`);
+    const { installsCount, ratingAvg, ratingCount } = await res.json();
+    return { installsCount, ratingAvg, ratingCount };
+  };
+
+  it("updates installs count after install and uninstall", async () => {
+    const other = await createUser(app, "USER");
+    await install(templateId);
+    await install(templateId, other.token);
+    await app.events.drain();
+    expect((await stats()).installsCount).toBe(2);
+
+    await call(app, "DELETE", `/templates/${templateId}/install`, { token: other.token });
+    await app.events.drain();
+    expect((await stats()).installsCount).toBe(1);
+  });
+
+  it("updates rating average on review create, update and delete", async () => {
+    const other = await createUser(app, "USER");
+    await install(templateId);
+    await install(templateId, other.token);
+    await review({ rating: 5 });
+    const { id } = await (await review({ rating: 2 }, other.token)).json();
+    await app.events.drain();
+    expect(await stats()).toMatchObject({ ratingAvg: 3.5, ratingCount: 2 });
+
+    await call(app, "PATCH", `/reviews/${id}`, { token: other.token, body: { rating: 4 } });
+    await app.events.drain();
+    expect((await stats()).ratingAvg).toBe(4.5);
+
+    await call(app, "DELETE", `/reviews/${id}`, { token: other.token });
+    await app.events.drain();
+    expect(await stats()).toMatchObject({ ratingAvg: 5, ratingCount: 1 });
+  });
+
+  it("does not bump template version", async () => {
+    await install(templateId);
+    await app.events.drain();
+    const res = await call(app, "GET", `/templates/${templateId}`);
+    expect((await res.json()).version).toBe(2);
+  });
+
+  it("sorts templates by popularity", async () => {
+    const quietId = await createTemplate(true);
+    await install(templateId);
+    await app.events.drain();
+    const list = await (await call(app, "GET", "/templates?sort=popular")).json();
+    expect(list.items.map((t: { id: string }) => t.id)).toEqual([templateId, quietId]);
+  });
+});

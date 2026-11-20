@@ -15,6 +15,7 @@ import type {
   ReviewWithUser,
 } from "../../src/modules/reviews/review.repository";
 import { createReviewService } from "../../src/modules/reviews/review.service";
+import type { EventPublisher } from "../../src/events/event-bus";
 import type {
   TemplateDetails,
   TemplateRepository,
@@ -107,6 +108,13 @@ const createFakes = () => {
     listByTemplate: async () => ({ items: [], total: 0, page: 1, limit: 20 }),
   };
 
+  const published: { event: string; payload: unknown }[] = [];
+  const events: EventPublisher = {
+    publish: (event, payload) => {
+      published.push({ event, payload });
+    },
+  };
+
   const add = (status: TemplateDetails["status"]) => {
     const template = makeTemplate(status);
     templates.set(template.id, template);
@@ -116,8 +124,9 @@ const createFakes = () => {
   return {
     add,
     installs,
-    installations: createInstallationService(installationRepo, templateRepo),
-    reviews: createReviewService(reviewRepo, installationRepo, templateRepo),
+    published,
+    installations: createInstallationService(installationRepo, templateRepo, events),
+    reviews: createReviewService(reviewRepo, installationRepo, templateRepo, events),
   };
 };
 
@@ -131,6 +140,9 @@ describe("InstallationService", () => {
     const template = fakes.add("PUBLISHED");
     const installation = await fakes.installations.install(user.id, template.id);
     expect(installation.templateId).toBe(template.id);
+    expect(fakes.published).toEqual([
+      { event: "template.installed", payload: { templateId: template.id, userId: user.id } },
+    ]);
   });
 
   it("refuses to install drafts and archived templates", async () => {
@@ -140,6 +152,7 @@ describe("InstallationService", () => {
         BusinessRuleError,
       );
     }
+    expect(fakes.published).toEqual([]);
   });
 
   it("refuses to install the same template twice", async () => {
@@ -174,6 +187,10 @@ describe("ReviewService", () => {
     const template = await installed();
     const review = await fakes.reviews.create(user, template.id, { rating: 5, comment: " Great " });
     expect(review).toMatchObject({ rating: 5, comment: "Great" });
+    expect(fakes.published[fakes.published.length - 1]).toEqual({
+      event: "review.created",
+      payload: { templateId: template.id, reviewId: review.id },
+    });
   });
 
   it("requires installation before reviewing", async () => {

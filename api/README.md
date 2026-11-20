@@ -48,6 +48,12 @@ bun test
 
 `test/unit` runs without a database. `test/integration` uses `TEST_DATABASE_URL` only (truncates its tables), never `DATABASE_URL`. The `marketplace_test` database is created on first `docker compose up`; for an existing volume run `docker compose exec db createdb -U marketplace marketplace_test`.
 
+## Events (async)
+
+`src/events/event-bus.ts` is an in-process event bus. Services publish domain events (`template.installed`, `template.uninstalled`, `review.created`, `review.updated`, `review.deleted`) and return immediately; subscribers run asynchronously after the response (`setImmediate`), each in isolation (a failing handler is logged and does not affect others).
+
+`template-stats.handlers.ts` subscribes to them and recalculates `installsCount`, `ratingAvg` and `ratingCount` from the source tables, so stats stay correct even if events are processed out of order. Stats updates do not change the template `version`.
+
 ## Auth
 
 - `POST /auth/register` creates a `USER` and returns `{ token, user }`; `POST /auth/login` returns the same.

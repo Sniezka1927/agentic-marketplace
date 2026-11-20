@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { offsetOf, type Page, type PageRequest } from "../../common/pagination";
 import type { Database } from "../../db/client";
-import { installations, templates } from "../../db/schema";
+import { installations, reviews, templates } from "../../db/schema";
 import type { Category } from "../categories/category.repository";
 
 export type Template = typeof templates.$inferSelect;
@@ -37,6 +37,8 @@ export interface TemplateRepository {
   update(id: string, expectedVersion: number, changes: TemplateChanges): Promise<TemplateDetails | null>;
   delete(id: string): Promise<void>;
   countInstallations(id: string): Promise<number>;
+  refreshInstallStats(id: string): Promise<void>;
+  refreshRatingStats(id: string): Promise<void>;
 }
 
 const orderBy = (sort: TemplateSort = "newest") => {
@@ -114,6 +116,25 @@ export const createTemplateRepository = (db: Database): TemplateRepository => {
 
     async delete(id) {
       await db.delete(templates).where(eq(templates.id, id));
+    },
+
+    async refreshInstallStats(id) {
+      await db
+        .update(templates)
+        .set({
+          installsCount: sql`(select count(*) from ${installations} where ${installations.templateId} = ${id})`,
+        })
+        .where(eq(templates.id, id));
+    },
+
+    async refreshRatingStats(id) {
+      await db
+        .update(templates)
+        .set({
+          ratingCount: sql`(select count(*) from ${reviews} where ${reviews.templateId} = ${id})`,
+          ratingAvg: sql`coalesce((select round(avg(${reviews.rating}), 2) from ${reviews} where ${reviews.templateId} = ${id}), 0)`,
+        })
+        .where(eq(templates.id, id));
     },
 
     async countInstallations(id) {
