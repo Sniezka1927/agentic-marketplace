@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { categories, templates } from "../../src/db/schema";
-import { call, createTestApp, db, resetDb } from "../helpers";
+import { call, createTestApp, createUser, db, resetDb } from "../helpers";
 
 const app = createTestApp();
 
+let adminToken: string;
+
 beforeEach(async () => {
   await resetDb();
+  adminToken = (await createUser(app, "ADMIN")).token;
 });
 
 const createCategory = async (body: Record<string, unknown>) =>
-  call(app, "POST", "/categories", body);
+  call(app, "POST", "/categories", { body, token: adminToken });
 
 describe("/categories", () => {
   it("creates and lists categories", async () => {
@@ -45,14 +48,17 @@ describe("/categories", () => {
 
   it("updates category", async () => {
     const { id } = await (await createCategory({ name: "Research" })).json();
-    const res = await call(app, "PATCH", `/categories/${id}`, { description: "Deep dives" });
+    const res = await call(app, "PATCH", `/categories/${id}`, {
+      body: { description: "Deep dives" },
+      token: adminToken,
+    });
     expect(res.status).toBe(200);
     expect((await res.json()).description).toBe("Deep dives");
   });
 
   it("deletes empty category with 204", async () => {
     const { id } = await (await createCategory({ name: "Research" })).json();
-    expect((await call(app, "DELETE", `/categories/${id}`)).status).toBe(204);
+    expect((await call(app, "DELETE", `/categories/${id}`, { token: adminToken })).status).toBe(204);
     expect((await call(app, "GET", `/categories/${id}`)).status).toBe(404);
   });
 
@@ -66,8 +72,28 @@ describe("/categories", () => {
       templateUrl: "grokbot://app/v1/bot-template?id=1",
       categoryId: category!.id,
     });
-    const res = await call(app, "DELETE", `/categories/${category!.id}`);
+    const res = await call(app, "DELETE", `/categories/${category!.id}`, {
+      token: adminToken,
+    });
     expect(res.status).toBe(409);
+  });
+
+  it("requires admin role for writes", async () => {
+    const anonymous = await call(app, "POST", "/categories", { body: { name: "Writing" } });
+    expect(anonymous.status).toBe(401);
+
+    const { token } = await createUser(app, "USER");
+    const asUser = await call(app, "POST", "/categories", {
+      body: { name: "Writing" },
+      token,
+    });
+    expect(asUser.status).toBe(403);
+    expect((await asUser.json()).error.code).toBe("FORBIDDEN");
+  });
+
+  it("allows anyone to read categories", async () => {
+    await createCategory({ name: "Writing" });
+    expect((await call(app, "GET", "/categories")).status).toBe(200);
   });
 
   it("returns 404 json for unknown route", async () => {

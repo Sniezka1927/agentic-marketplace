@@ -6,10 +6,12 @@ import {
   UpdateCategoryBody,
   toCategoryDto,
 } from "./category.dto";
+import type { AuthGuard } from "../auth/auth.guard";
 import type { CategoryService } from "./category.service";
 
-export const categoryRoutes = (service: CategoryService) =>
+export const categoryRoutes = (service: CategoryService, guard: AuthGuard) =>
   new Elysia({ prefix: "/categories", detail: { tags: ["Categories"] } })
+    .use(guard)
     .get("/", async () => (await service.list()).map(toCategoryDto), {
       response: t.Array(CategoryDto),
       detail: { summary: "List categories" },
@@ -24,9 +26,16 @@ export const categoryRoutes = (service: CategoryService) =>
       async ({ body, status }) =>
         status(201, toCategoryDto(await service.create(body))),
       {
+        auth: ["ADMIN"],
         body: CreateCategoryBody,
-        response: { 201: CategoryDto, 409: ErrorResponse, 422: ErrorResponse },
-        detail: { summary: "Create category" },
+        response: {
+          201: CategoryDto,
+          401: ErrorResponse,
+          403: ErrorResponse,
+          409: ErrorResponse,
+          422: ErrorResponse,
+        },
+        detail: { summary: "Create category (admin)", security: [{ bearerAuth: [] }] },
       },
     )
     .patch(
@@ -34,15 +43,18 @@ export const categoryRoutes = (service: CategoryService) =>
       async ({ params, body }) =>
         toCategoryDto(await service.update(params.id, body)),
       {
+        auth: ["ADMIN"],
         params: IdParams,
         body: UpdateCategoryBody,
         response: {
           200: CategoryDto,
+          401: ErrorResponse,
+          403: ErrorResponse,
           404: ErrorResponse,
           409: ErrorResponse,
           422: ErrorResponse,
         },
-        detail: { summary: "Update category" },
+        detail: { summary: "Update category (admin)", security: [{ bearerAuth: [] }] },
       },
     )
     .delete(
@@ -52,8 +64,15 @@ export const categoryRoutes = (service: CategoryService) =>
         return status(204, undefined);
       },
       {
+        auth: ["ADMIN"],
         params: IdParams,
-        response: { 204: t.Void(), 404: ErrorResponse, 409: ErrorResponse },
-        detail: { summary: "Delete category" },
+        response: {
+          204: t.Void(),
+          401: ErrorResponse,
+          403: ErrorResponse,
+          404: ErrorResponse,
+          409: ErrorResponse,
+        },
+        detail: { summary: "Delete category (admin)", security: [{ bearerAuth: [] }] },
       },
     );
