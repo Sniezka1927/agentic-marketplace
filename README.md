@@ -38,7 +38,7 @@ docker compose up --build
 - API docs (OpenAPI): http://localhost:3001/docs
 - PostgreSQL: localhost:5432
 
-On start the API container applies migrations, seeds categories and the admin account (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`), and starts the server.
+On start the API container applies migrations, seeds categories (the ones used on the x.ai bot marketplace), the admin account (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`) and 19 demo templates linked to real bots from https://x.ai/bot/marketplace, then starts the server. Demo templates belong to a "x.ai Marketplace" account that cannot log in and are seeded only once, so deleting one in the app is permanent.
 
 ### 2. Frontend
 

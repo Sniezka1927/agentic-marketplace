@@ -11,7 +11,7 @@ docker compose up --build
 - API docs (OpenAPI): http://localhost:3001/docs
 - Postgres: localhost:5432
 
-On start the API container runs migrations, then the seed (categories + admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`), then the server.
+On start the API container runs migrations, then the seed (x.ai marketplace categories, admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, and once 19 demo templates from `src/db/demo-bots.ts` linked to bots on https://x.ai/bot/marketplace), then the server.
 
 ## Database
 
