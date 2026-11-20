@@ -22,7 +22,7 @@ export function TemplateForm({
 }) {
   const categories = useCategories();
   const [form, setForm] = useState<TemplateInput>(
-    initial ?? { name: "", description: "", templateUrl: "grokbot://app/v1/bot-template?id=", categoryId: "" },
+    initial ?? { name: "", description: "", xUrl: "", categoryId: "" },
   );
 
   const set = (field: keyof TemplateInput) => (value: string) =>
@@ -34,7 +34,7 @@ export function TemplateForm({
       ...form,
       name: form.name.trim(),
       description: form.description.trim(),
-      templateUrl: form.templateUrl.trim(),
+      xUrl: form.xUrl.trim(),
     });
   };
 
@@ -56,12 +56,15 @@ export function TemplateForm({
           onChange={(e) => set("description")(e.target.value)}
         />
       </Field>
-      <Field label="Template URL (grokbot:// or https://)">
+      <Field label="x.ai bot link">
         <Input
           required
-          pattern="(grokbot|https)://\S+"
-          value={form.templateUrl}
-          onChange={(e) => set("templateUrl")(e.target.value)}
+          type="url"
+          placeholder="https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN"
+          pattern="https://(www\.)?x\.ai/bot/[A-Za-z0-9_\-]{1,100}/?(\?.*)?"
+          title="Link to a bot on x.ai, e.g. https://x.ai/bot/<id>"
+          value={form.xUrl}
+          onChange={(e) => set("xUrl")(e.target.value)}
         />
       </Field>
       <Field label="Category">
