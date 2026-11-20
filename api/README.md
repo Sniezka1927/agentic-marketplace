@@ -48,9 +48,26 @@ bun test
 
 `test/unit` runs without a database. `test/integration` uses `TEST_DATABASE_URL` only (truncates its tables), never `DATABASE_URL`. The `marketplace_test` database is created on first `docker compose up`; for an existing volume run `docker compose exec db createdb -U marketplace marketplace_test`.
 
+## Auth
+
+- `POST /auth/register` creates a `USER` and returns `{ token, user }`; `POST /auth/login` returns the same.
+- Send `Authorization: Bearer <token>`. Tokens are HS256 JWT signed with `JWT_SECRET` (min 32 chars), valid for `JWT_EXPIRES_IN`.
+- The user is loaded from the database on every request, so role changes apply immediately.
+- Roles: `USER`, `ADMIN`. The first admin comes from the seed (`ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+- Missing/invalid token → 401, wrong role → 403.
+
 ## Endpoints
 
-- `GET|POST /categories`, `GET|PATCH|DELETE /categories/:id` (category with templates cannot be deleted → 409)
+| Method | Path | Access |
+|---|---|---|
+| POST | `/auth/register`, `/auth/login` | public |
+| GET | `/auth/me` | logged in |
+| GET | `/users?page&limit&q` | ADMIN |
+| PATCH | `/users/:id/role` | ADMIN (not own role → 422) |
+| GET | `/categories`, `/categories/:id` | public |
+| POST, PATCH, DELETE | `/categories`, `/categories/:id` | ADMIN (category with templates cannot be deleted → 409) |
+| GET | `/agents`, `/agents/:id` | public (X marketplace PoC) |
+
 - `GET /agents?page=1&limit=20&q=&author=` → `{ items, page, limit, total }` (`limit` max 100)
 - `GET /agents/:id` → `Agent` or 404
 
