@@ -9,14 +9,19 @@ import { createInstallationRepository } from "./modules/installations/installati
 import { createInstallationService } from "./modules/installations/installation.service";
 import { createReviewRepository } from "./modules/reviews/review.repository";
 import { createReviewService } from "./modules/reviews/review.service";
+import { createSyncRunRepository } from "./modules/sync/sync-run.repository";
+import { createSyncService } from "./modules/sync/sync.service";
 import { createTemplateRepository } from "./modules/templates/template.repository";
 import { registerTemplateStatsHandlers } from "./modules/templates/template-stats.handlers";
 import { createTemplateService } from "./modules/templates/template.service";
 import { createUserRepository } from "./modules/users/user.repository";
 import { createUserService } from "./modules/users/user.service";
-import { createMarketplaceClient } from "./x-marketplace";
+import { createMarketplaceClient, type MarketplaceClient } from "./x-marketplace";
 
-export const createContainer = (db: Database) => {
+export const createContainer = (
+  db: Database,
+  marketplaceClient: MarketplaceClient = createMarketplaceClient(config.xMarketplace),
+) => {
   if (config.jwt.secret.length < 32) {
     throw new Error("JWT_SECRET must be set and at least 32 characters long");
   }
@@ -46,7 +51,13 @@ export const createContainer = (db: Database) => {
       templateRepository,
       events,
     ),
-    marketplaceClient: createMarketplaceClient(config.xMarketplace),
+    syncService: createSyncService(
+      createSyncRunRepository(db),
+      templateRepository,
+      categoryRepository,
+      marketplaceClient,
+      { importCategorySlug: config.xMarketplace.importCategorySlug },
+    ),
   };
 };
 
