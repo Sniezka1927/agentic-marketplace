@@ -6,7 +6,8 @@ import { EXPRESSIONS } from "@/vendor/bloub/expressions";
 import { DEMI_VIEWBOX, RAYON } from "@/vendor/bloub/repere";
 import { COLORS, SHAPES } from "@/vendor/bloub/skins";
 
-const PALETTE = COLORS.filter((color) => color.id !== "creme" && color.id !== "gris");
+const HIDDEN_ON_BACKGROUND = new Set(["encre", "creme", "gris"]);
+const PALETTE = COLORS.filter((color) => !HIDDEN_ON_BACKGROUND.has(color.id));
 const REST_FRAME_AT = 1.2;
 
 const hash = (value: string) => {
