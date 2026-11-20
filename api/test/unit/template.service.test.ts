@@ -44,17 +44,16 @@ const createFakes = () => {
       total: rows.size,
     }),
     findById: async (id) => rows.get(id) ?? null,
+    findByExternalId: async (externalId) =>
+      [...rows.values()].find((row) => row.externalId === externalId) ?? null,
     create: async (data) => {
       const now = new Date();
       const row: TemplateDetails = {
         id: crypto.randomUUID(),
         name: data.name,
         description: data.description ?? "",
-        templateUrl: data.templateUrl,
         status: data.status ?? "DRAFT",
-        source: data.source ?? "LOCAL",
-        externalId: null,
-        externalAuthor: null,
+        externalId: data.externalId,
         authorId: data.authorId ?? null,
         categoryId: data.categoryId,
         version: 1,
@@ -84,7 +83,6 @@ const createFakes = () => {
       rows.delete(id);
     },
     countInstallations: async (id) => installs.get(id) ?? 0,
-    upsertExternal: async () => {},
     refreshInstallStats: async () => {},
     refreshRatingStats: async () => {},
   };
@@ -109,7 +107,7 @@ describe("TemplateService", () => {
     service.create(author, {
       name: "File Sorter",
       description,
-      templateUrl: "grokbot://app/v1/bot-template?id=abc",
+      xUrl: `https://x.ai/bot/${crypto.randomUUID()}`,
       categoryId: category.id,
     });
 
@@ -123,7 +121,7 @@ describe("TemplateService", () => {
     await expect(
       service.create(author, {
         name: "X",
-        templateUrl: "https://example.com",
+        xUrl: "https://x.ai/bot/unknown-category",
         categoryId: crypto.randomUUID(),
       }),
     ).rejects.toBeInstanceOf(BusinessRuleError);
@@ -178,6 +176,38 @@ describe("TemplateService", () => {
     fakes.installs.set(template.id, 3);
     await expect(service.remove(author, template.id)).rejects.toBeInstanceOf(ConflictError);
     expect(fakes.rows.has(template.id)).toBe(true);
+  });
+
+  it("stores the bot id from the x.ai link", async () => {
+    const template = await service.create(author, {
+      name: "New Bot",
+      xUrl: "https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN",
+      categoryId: category.id,
+    });
+    expect(template.externalId).toBe("SeMqhg9bPD4Qd_8i7I-vN");
+  });
+
+  it("rejects links that are not x.ai bots", async () => {
+    await expect(
+      service.create(author, {
+        name: "Fake",
+        xUrl: "https://x.ai.evil.com/bot/abc",
+        categoryId: category.id,
+      }),
+    ).rejects.toBeInstanceOf(BusinessRuleError);
+  });
+
+  it("rejects a bot that is already listed, also on update", async () => {
+    const xUrl = "https://x.ai/bot/dup";
+    await service.create(author, { name: "One", xUrl, categoryId: category.id });
+    await expect(
+      service.create(stranger, { name: "Two", xUrl, categoryId: category.id }),
+    ).rejects.toBeInstanceOf(ConflictError);
+
+    const other = await draft();
+    await expect(
+      service.update(author, other.id, { xUrl, version: 1 }),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 
   it("deletes template without installations", async () => {

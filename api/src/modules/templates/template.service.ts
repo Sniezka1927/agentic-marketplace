@@ -6,6 +6,7 @@ import {
 } from "../../common/errors";
 import type { PageRequest } from "../../common/pagination";
 import type { CategoryRepository } from "../categories/category.repository";
+import { parseXBotUrl } from "../../x/bot-link";
 import type { User } from "../users/user.repository";
 import type {
   TemplateChanges,
@@ -19,7 +20,7 @@ export const MIN_PUBLISH_DESCRIPTION_LENGTH = 20;
 export type CreateTemplateInput = {
   name: string;
   description?: string;
-  templateUrl: string;
+  xUrl: string;
   categoryId: string;
 };
 
@@ -56,6 +57,18 @@ export const createTemplateService = (
     }
   };
 
+  const resolveBotId = async (xUrl: string, currentId?: string) => {
+    const botId = parseXBotUrl(xUrl);
+    if (!botId) {
+      throw new BusinessRuleError("Provide a link to an x.ai bot, e.g. https://x.ai/bot/<id>");
+    }
+    const existing = await repo.findByExternalId(botId);
+    if (existing && existing.id !== currentId) {
+      throw new ConflictError("This x.ai bot is already listed in the marketplace");
+    }
+    return botId;
+  };
+
   const save = async (template: TemplateDetails, version: number, changes: TemplateChanges) => {
     const updated = await repo.update(template.id, version, changes);
     if (!updated) {
@@ -77,14 +90,14 @@ export const createTemplateService = (
 
     async create(viewer: Viewer, input: CreateTemplateInput) {
       await ensureCategory(input.categoryId);
+      const externalId = await resolveBotId(input.xUrl);
       return repo.create({
         name: input.name.trim(),
         description: input.description?.trim() ?? "",
-        templateUrl: input.templateUrl.trim(),
+        externalId,
         categoryId: input.categoryId,
         authorId: viewer.id,
         status: "DRAFT",
-        source: "LOCAL",
       });
     },
 
@@ -103,10 +116,12 @@ export const createTemplateService = (
           `Published template needs a description of at least ${MIN_PUBLISH_DESCRIPTION_LENGTH} characters`,
         );
       }
+      const externalId =
+        input.xUrl !== undefined ? await resolveBotId(input.xUrl, template.id) : undefined;
       return save(template, version, {
         name: input.name?.trim(),
         description,
-        templateUrl: input.templateUrl?.trim(),
+        externalId,
         categoryId: input.categoryId,
       });
     },

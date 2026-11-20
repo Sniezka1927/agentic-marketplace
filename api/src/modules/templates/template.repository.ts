@@ -19,34 +19,24 @@ export type TemplateFilter = {
   categoryId?: string;
   authorId?: string;
   status?: TemplateStatus;
-  source?: Template["source"];
   sort?: TemplateSort;
 };
 
 export type TemplateChanges = Partial<
   Pick<
     NewTemplate,
-    "name" | "description" | "templateUrl" | "categoryId" | "status" | "publishedAt"
+    "name" | "description" | "externalId" | "categoryId" | "status" | "publishedAt"
   >
 >;
-
-export type ExternalTemplate = {
-  externalId: string;
-  name: string;
-  description: string;
-  templateUrl: string;
-  externalAuthor: string;
-  categoryId: string;
-};
 
 export interface TemplateRepository {
   list(query: PageRequest & TemplateFilter): Promise<Page<TemplateDetails>>;
   findById(id: string): Promise<TemplateDetails | null>;
+  findByExternalId(externalId: string): Promise<Template | null>;
   create(data: NewTemplate): Promise<TemplateDetails>;
   update(id: string, expectedVersion: number, changes: TemplateChanges): Promise<TemplateDetails | null>;
   delete(id: string): Promise<void>;
   countInstallations(id: string): Promise<number>;
-  upsertExternal(data: ExternalTemplate): Promise<void>;
   refreshInstallStats(id: string): Promise<void>;
   refreshRatingStats(id: string): Promise<void>;
 }
@@ -75,7 +65,6 @@ const buildWhere = (filter: TemplateFilter): SQL | undefined => {
     filter.categoryId ? eq(templates.categoryId, filter.categoryId) : undefined,
     filter.authorId ? eq(templates.authorId, filter.authorId) : undefined,
     filter.status ? eq(templates.status, filter.status) : undefined,
-    filter.source ? eq(templates.source, filter.source) : undefined,
   ];
   return and(...conditions.filter((c): c is SQL => c !== undefined));
 };
@@ -110,6 +99,14 @@ export const createTemplateRepository = (db: Database): TemplateRepository => {
 
     findById,
 
+    async findByExternalId(externalId) {
+      const [row] = await db
+        .select()
+        .from(templates)
+        .where(eq(templates.externalId, externalId));
+      return row ?? null;
+    },
+
     async create(data) {
       const [row] = await db.insert(templates).values(data).returning({ id: templates.id });
       return (await findById(row!.id))!;
@@ -126,28 +123,6 @@ export const createTemplateRepository = (db: Database): TemplateRepository => {
 
     async delete(id) {
       await db.delete(templates).where(eq(templates.id, id));
-    },
-
-    async upsertExternal(data) {
-      await db
-        .insert(templates)
-        .values({
-          ...data,
-          source: "X",
-          status: "PUBLISHED",
-          publishedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [templates.source, templates.externalId],
-          set: {
-            name: data.name,
-            description: data.description,
-            templateUrl: data.templateUrl,
-            externalAuthor: data.externalAuthor,
-            version: sql`${templates.version} + 1`,
-          },
-          setWhere: sql`(${templates.name}, ${templates.description}, ${templates.templateUrl}, ${templates.externalAuthor}) is distinct from (excluded.name, excluded.description, excluded.template_url, excluded.external_author)`,
-        });
     },
 
     async refreshInstallStats(id) {

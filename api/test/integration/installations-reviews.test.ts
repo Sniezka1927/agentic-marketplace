@@ -18,7 +18,7 @@ const createTemplate = async (publish: boolean) => {
     body: {
       name: "Inbox Helper",
       description: "Sorts your inbox and drafts replies for you.",
-      templateUrl: "grokbot://app/v1/bot-template?id=inbox",
+      xUrl: `https://x.ai/bot/${crypto.randomUUID()}`,
       categoryId: category!.id,
     },
   });
