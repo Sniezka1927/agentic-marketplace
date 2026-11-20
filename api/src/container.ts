@@ -4,6 +4,8 @@ import { createAuthService } from "./modules/auth/auth.service";
 import { createTokenService } from "./modules/auth/token.service";
 import { createCategoryRepository } from "./modules/categories/category.repository";
 import { createCategoryService } from "./modules/categories/category.service";
+import { createTemplateRepository } from "./modules/templates/template.repository";
+import { createTemplateService } from "./modules/templates/template.service";
 import { createUserRepository } from "./modules/users/user.repository";
 import { createUserService } from "./modules/users/user.service";
 import { createMarketplaceClient } from "./x-marketplace";
@@ -14,12 +16,14 @@ export const createContainer = (db: Database) => {
   }
 
   const userRepository = createUserRepository(db);
+  const categoryRepository = createCategoryRepository(db);
   const tokenService = createTokenService(config.jwt.secret, config.jwt.expiresIn);
 
   return {
     authService: createAuthService(userRepository, tokenService),
     userService: createUserService(userRepository),
-    categoryService: createCategoryService(createCategoryRepository(db)),
+    categoryService: createCategoryService(categoryRepository),
+    templateService: createTemplateService(createTemplateRepository(db), categoryRepository),
     marketplaceClient: createMarketplaceClient(config.xMarketplace),
   };
 };
