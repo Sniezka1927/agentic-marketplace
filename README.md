@@ -218,4 +218,4 @@ Error responses: 400 malformed body, 401 missing or invalid token, 403 role or o
 
 ## Demo
 
-Demo video: _link to be added_.
+Demo video (3 min): [`docs/demo.mp4`](docs/demo.mp4). Catalog, registration, installing a bot in Grok Bot, a review, publishing a template from an x.ai link, the admin panel and the API docs.
