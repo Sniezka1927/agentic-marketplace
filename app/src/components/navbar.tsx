@@ -15,6 +15,14 @@ export function Navbar() {
         <Link href="/" className="font-semibold">
           Agentic Marketplace
         </Link>
+        <Link href="/templates" className="hover:underline">
+          Templates
+        </Link>
+        {status === "authenticated" && (
+          <Link href="/installations" className="hover:underline">
+            Installed
+          </Link>
+        )}
         <div className="ml-auto flex items-center gap-3">
           {status === "authenticated" && user ? (
             <>
