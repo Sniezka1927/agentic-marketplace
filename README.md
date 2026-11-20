@@ -10,7 +10,7 @@ A marketplace of agent templates for Grok Bot. Users list bots from x.ai by past
 | Database | PostgreSQL 17, [Drizzle ORM](https://orm.drizzle.team) on `Bun.sql`, drizzle-kit migrations |
 | Auth | JWT (HS256, `jose`), passwords hashed with `Bun.password` (argon2id) |
 | API docs | OpenAPI 3.1 via `@elysiajs/openapi` (Scalar UI at `/docs`) |
-| Frontend | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query, sonner |
+| Frontend | Next.js 16 (App Router), React 19, Tailwind CSS 4, TanStack Query |
 | Infrastructure | Docker Compose (`db` + `api`), GitHub Actions CI |
 | Tests | `bun test`: unit tests (services with fake repositories) and integration tests (HTTP → DB) |
 
