@@ -5,7 +5,6 @@ import { api, ApiError } from "./api";
 import type {
   Category,
   Installation,
-  InstallationWithTemplate,
   Page,
   Review,
   Template,
@@ -25,7 +24,6 @@ export const keys = {
   templates: (params: object) => ["templates", "list", params] as const,
   template: (id: string) => ["templates", "detail", id] as const,
   installation: (id: string) => ["installations", "template", id] as const,
-  installations: (page: number) => ["installations", "mine", page] as const,
   reviews: (id: string, page: number) => ["reviews", id, page] as const,
 };
 
@@ -61,14 +59,6 @@ export const useOwnInstallation = (templateId: string, enabled: boolean) =>
       }
     },
     enabled,
-  });
-
-export const useInstallations = (page: number) =>
-  useQuery({
-    queryKey: keys.installations(page),
-    queryFn: () =>
-      api<Page<InstallationWithTemplate>>("/installations/mine", { query: { page, limit: 12 } }),
-    placeholderData: (previous) => previous,
   });
 
 export const useReviews = (templateId: string, page: number) =>

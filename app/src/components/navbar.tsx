@@ -19,14 +19,9 @@ export function Navbar() {
           Templates
         </Link>
         {status === "authenticated" && (
-          <>
-            <Link href="/installations" className="hover:underline">
-              Installed
-            </Link>
-            <Link href="/my/templates" className="hover:underline">
-              My templates
-            </Link>
-          </>
+          <Link href="/my/templates" className="hover:underline">
+            My templates
+          </Link>
         )}
         {user?.role === "ADMIN" && (
           <Link href="/admin" className="hover:underline">

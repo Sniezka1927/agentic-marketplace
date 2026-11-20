@@ -78,7 +78,7 @@ All configuration comes from environment variables (`api/.env`, `app/.env.local`
 
 - **Accounts and roles:** registration, login, JWT bearer auth. `USER` and `ADMIN` roles; admins can promote or demote other users.
 - **Templates:** create a draft from an x.ai bot link, edit, publish, archive and delete. The catalog has search, a category filter, sorting (newest, most installed, top rated, name) and pagination. Drafts are visible only to the author and admins.
-- **Installations:** "Install in Grok Bot" records the installation and opens `grokbot://app/v1/bot-template?id=<id>`; uninstall; "Installed" page.
+- **Installations:** "Install in Grok Bot" records the installation and opens `grokbot://app/v1/bot-template?id=<id>`; uninstall.
 - **Reviews:** 1–5 star rating with a comment. Authors can edit their own reviews; authors and admins can delete them.
 - **Statistics:** install count and average rating are recalculated asynchronously by event handlers.
 - **x.ai integration:** templates are linked to x.ai bots; the link is validated and the bot id is turned into the x.ai page link and the Grok Bot install deeplink.
