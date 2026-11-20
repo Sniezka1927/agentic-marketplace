@@ -32,6 +32,16 @@ export const installationRoutes = (service: InstallationService, guard: AuthGuar
         detail: { summary: "Install a published template", security },
       },
     )
+    .get(
+      "/templates/:id/install",
+      async ({ user, params }) => toInstallationDto(await service.getOwn(user.id, params.id)),
+      {
+        auth: true,
+        params: IdParams,
+        response: { 200: InstallationDto, 401: ErrorResponse, 404: ErrorResponse },
+        detail: { summary: "Get own installation of a template (404 if not installed)", security },
+      },
+    )
     .delete(
       "/templates/:id/install",
       async ({ user, params, status }) => {

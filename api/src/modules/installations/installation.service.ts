@@ -31,6 +31,12 @@ export const createInstallationService = (
     events.publish("template.uninstalled", { templateId, userId });
   },
 
+  async getOwn(userId: string, templateId: string) {
+    const installation = await installations.find(userId, templateId);
+    if (!installation) throw new NotFoundError("Template is not installed");
+    return installation;
+  },
+
   listOwn: (userId: string, page: PageRequest) => installations.listByUser(userId, page),
 });
 

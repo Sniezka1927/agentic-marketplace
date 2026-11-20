@@ -62,6 +62,15 @@ describe("installations", () => {
     ).toBe(404);
   });
 
+  it("reports whether the current user installed a template", async () => {
+    const check = () => call(app, "GET", `/templates/${templateId}/install`, { token: user.token });
+    expect((await check()).status).toBe(404);
+    await install(templateId);
+    const res = await check();
+    expect(res.status).toBe(200);
+    expect((await res.json()).templateId).toBe(templateId);
+  });
+
   it("rejects second install with 409", async () => {
     await install(templateId);
     expect((await install(templateId)).status).toBe(409);
