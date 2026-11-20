@@ -1,15 +1,17 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { errorMessage } from "@/lib/api";
 import { useCategories, useTemplates } from "@/lib/queries";
 import type { TemplateSort } from "@/lib/types";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { Pagination } from "./pagination";
 import { TemplateCard } from "./template-card";
-import { Button, ErrorBox, Input, PageTitle, Select, Spinner } from "./ui";
+import { ErrorBox, Input, PageTitle, Select, Spinner } from "./ui";
 
 const LIMIT = 12;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const SORTS: { value: TemplateSort; label: string }[] = [
   { value: "newest", label: "Newest" },
@@ -29,6 +31,7 @@ export function Catalog() {
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
   const [search, setSearch] = useState(q);
+  const debouncedSearch = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
   const categories = useCategories();
   const templates = useTemplates({
     page,
@@ -38,36 +41,41 @@ export function Catalog() {
     sort,
   });
 
-  const update = (changes: Record<string, string | number>) => {
-    const next = new URLSearchParams(searchParams);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value === "" || value === 1 && key === "page") next.delete(key);
-      else next.set(key, String(value));
-    }
-    if (!("page" in changes)) next.delete("page");
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+  const update = useCallback(
+    (changes: Record<string, string | number>) => {
+      const next = new URLSearchParams(searchParams);
+      for (const [key, value] of Object.entries(changes)) {
+        if (value === "" || (value === 1 && key === "page")) next.delete(key);
+        else next.set(key, String(value));
+      }
+      if (!("page" in changes)) next.delete("page");
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  useEffect(() => {
+    if (debouncedSearch !== q) update({ q: debouncedSearch });
+  }, [debouncedSearch, q, update]);
 
   const onSearch = (event: FormEvent) => {
     event.preventDefault();
-    update({ q: search.trim() });
+    if (search.trim() !== q) update({ q: search.trim() });
   };
 
   return (
     <>
       <PageTitle>Templates</PageTitle>
       <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto]">
-        <form onSubmit={onSearch} className="flex gap-2">
+        <form onSubmit={onSearch} role="search">
           <Input
+            type="search"
             placeholder="Search by name or description"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search"
           />
-          <Button type="submit" variant="secondary">
-            Search
-          </Button>
         </form>
         <Select
           value={categoryId}
