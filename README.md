@@ -1,6 +1,6 @@
 # Agentic Marketplace
 
-A marketplace of agent templates for Grok Bot. Users publish their own agent templates, browse and search the catalog, install templates with one click (`grokbot://` link) and review the ones they use. Bots from the X internal marketplace are imported into the catalog automatically. Admins manage categories, user roles and the import.
+A marketplace of agent templates for Grok Bot. Users list bots from x.ai by pasting their link (`https://x.ai/bot/<id>`), browse and search the catalog, install templates with one click (the same `grokbot://` deeplink as "Add to Grok Bot" on x.ai) and review the ones they use. Admins manage categories and user roles.
 
 ## Tech stack
 
@@ -38,7 +38,7 @@ docker compose up --build
 - API docs (OpenAPI): http://localhost:3001/docs
 - PostgreSQL: localhost:5432
 
-On start the API container applies migrations, seeds categories and the admin account (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`), starts the server and runs the first import from the X marketplace (mock data unless `X_MARKETPLACE_URL` and `X_MARKETPLACE_TOKEN` are set).
+On start the API container applies migrations, seeds categories and the admin account (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`), and starts the server.
 
 ### 2. Frontend
 
@@ -73,18 +73,16 @@ All configuration comes from environment variables (`api/.env`, `app/.env.local`
 | `JWT_SECRET` (≥ 32 chars), `JWT_EXPIRES_IN` | token signing and lifetime; the API refuses to start without a secret |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | initial admin created by the seed |
 | `CORS_ORIGIN` | frontend origin allowed by CORS |
-| `X_MARKETPLACE_URL`, `X_MARKETPLACE_TOKEN` | X marketplace API and bearer JWT (mock client when empty) |
-| `X_SYNC_INTERVAL_MINUTES`, `X_IMPORT_CATEGORY_SLUG` | import schedule (0 disables) and category for imported bots |
 
 ## Features
 
 - **Accounts and roles:** registration, login, JWT bearer auth. `USER` and `ADMIN` roles; admins can promote or demote other users.
-- **Templates:** create as draft, edit, publish, archive and delete. The catalog has search, category and source filters, sorting (newest, most installed, top rated, name) and pagination. Drafts are visible only to the author and admins.
-- **Installations:** install and uninstall published templates; "Installed" page; the install link opens the template in Grok Bot.
+- **Templates:** create a draft from an x.ai bot link, edit, publish, archive and delete. The catalog has search, a category filter, sorting (newest, most installed, top rated, name) and pagination. Drafts are visible only to the author and admins.
+- **Installations:** "Install in Grok Bot" records the installation and opens `grokbot://app/v1/bot-template?id=<id>`; uninstall; "Installed" page.
 - **Reviews:** 1–5 star rating with a comment. Authors can edit their own reviews; authors and admins can delete them.
 - **Statistics:** install count and average rating are recalculated asynchronously by event handlers.
-- **X marketplace integration:** a scheduled and on-demand import of bots from the external X marketplace API, with run history.
-- **Admin panel:** categories CRUD, users and roles, X sync with history.
+- **x.ai integration:** templates are linked to x.ai bots; the link is validated and the bot id is turned into the x.ai page link and the Grok Bot install deeplink.
+- **Admin panel:** categories CRUD, users and roles.
 
 ### Business rules
 
@@ -94,7 +92,7 @@ All configuration comes from environment variables (`api/.env`, `app/.env.local`
 4. Template edits use optimistic locking: saving with an outdated `version` returns 409.
 5. A template with installations cannot be deleted, only archived. A category with templates cannot be deleted.
 6. Only the author or an admin can modify a template; an admin cannot change their own role.
-7. Only one X marketplace import can run at a time.
+7. A template must point to a valid x.ai bot link, and each x.ai bot can be listed only once.
 
 ## Architecture
 
@@ -109,13 +107,11 @@ flowchart LR
     S -- publish --> E((event bus))
     E -- async --> H[stats handlers]
     H --> Rep
-    Sch[scheduler] --> Sync[sync service]
-    Sync --> X[X marketplace client]
-    Sync --> Rep
+    S --> L[x.ai link parser<br/>grokbot:// deeplink]
   end
   UI -- REST + Bearer JWT --> R
   Rep --> DB[(PostgreSQL)]
-  X -- HTTPS + Bearer JWT --> XM[X marketplace API]
+  UI -- grokbot:// deeplink --> GB[Grok Bot app]
 ```
 
 How a request flows, e.g. `POST /templates/:id/install`:
@@ -138,7 +134,6 @@ erDiagram
   TEMPLATES ||--o{ INSTALLATIONS : "installed as"
   USERS ||--o{ REVIEWS : writes
   TEMPLATES ||--o{ REVIEWS : receives
-  USERS |o--o{ SYNC_RUNS : triggers
 
   USERS {
     uuid id PK
@@ -161,11 +156,8 @@ erDiagram
     uuid id PK
     varchar name
     text description
-    text template_url
     enum status "DRAFT | PUBLISHED | ARCHIVED"
-    enum source "LOCAL | X"
-    varchar external_id "unique with source"
-    varchar external_author
+    varchar external_id UK "x.ai bot id"
     uuid author_id FK "nullable"
     uuid category_id FK
     int version "optimistic locking"
@@ -191,15 +183,6 @@ erDiagram
     timestamptz created_at
     timestamptz updated_at
   }
-  SYNC_RUNS {
-    uuid id PK
-    enum status "RUNNING | SUCCESS | FAILED"
-    int imported
-    text error
-    uuid triggered_by_id FK "nullable"
-    timestamptz started_at
-    timestamptz finished_at
-  }
 ```
 
 `installations` and `reviews` are unique per `(user_id, template_id)`.
@@ -218,10 +201,10 @@ Interactive documentation with request/response schemas: **http://localhost:3001
 | GET | `/categories` · `/categories/:id` | public | 200 |
 | POST | `/categories` | ADMIN | 201 |
 | PATCH · DELETE | `/categories/:id` | ADMIN | 200 · 204 |
-| GET | `/templates?page&limit&q&categoryId&source&sort` | public (published only) | 200 page |
+| GET | `/templates?page&limit&q&categoryId&sort` | public (published only) | 200 page |
 | GET | `/templates/mine?status&…` | logged in | 200 page |
 | GET | `/templates/:id` | public / author / ADMIN | 200 |
-| POST | `/templates` | logged in | 201 draft |
+| POST | `/templates` (body `xUrl`: `https://x.ai/bot/<id>`) | logged in | 201 draft |
 | PATCH | `/templates/:id` (body includes `version`) | author / ADMIN | 200 |
 | POST | `/templates/:id/publish` · `/archive` | author / ADMIN | 200 |
 | DELETE | `/templates/:id` | author / ADMIN | 204 |
@@ -230,8 +213,6 @@ Interactive documentation with request/response schemas: **http://localhost:3001
 | GET | `/templates/:id/reviews?page&limit` | public | 200 page |
 | POST | `/templates/:id/reviews` | logged in | 201 |
 | PATCH · DELETE | `/reviews/:id` | review author (DELETE also ADMIN) | 200 · 204 |
-| POST | `/sync/x` | ADMIN | 202 run started |
-| GET | `/sync/runs?page&limit` | ADMIN | 200 page |
 
 Error responses: 400 malformed body, 401 missing or invalid token, 403 role or ownership, 404 not found, 409 conflict (duplicate, outdated version, in use), 422 validation or business rule, 500 unexpected. Body: `{ "error": { "code": "VALIDATION_ERROR", "message": "…", "details": [{ "path": "/rating", "message": "…" }] } }`.
 

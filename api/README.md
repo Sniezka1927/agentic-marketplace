@@ -72,10 +72,10 @@ bun test
 | PATCH | `/users/:id/role` | ADMIN (not own role → 422) |
 | GET | `/categories`, `/categories/:id` | public |
 | POST, PATCH, DELETE | `/categories`, `/categories/:id` | ADMIN (category with templates cannot be deleted → 409) |
-| GET | `/templates?page&limit&q&categoryId&source&sort` | public, only `PUBLISHED` (`sort`: newest, popular, rating, name) |
+| GET | `/templates?page&limit&q&categoryId&sort` | public, only `PUBLISHED` (`sort`: newest, popular, rating, name) |
 | GET | `/templates/mine?status&...` | logged in, own templates in any status |
 | GET | `/templates/:id` | public for `PUBLISHED`, otherwise author or ADMIN |
-| POST | `/templates` | logged in, created as `DRAFT` |
+| POST | `/templates` | logged in, created as `DRAFT` from `xUrl` (`https://x.ai/bot/<id>`) |
 | PATCH | `/templates/:id` | author or ADMIN, body must include current `version` |
 | POST | `/templates/:id/publish`, `/templates/:id/archive` | author or ADMIN |
 | DELETE | `/templates/:id` | author or ADMIN |
@@ -85,29 +85,25 @@ bun test
 | POST | `/templates/:id/reviews` | logged in |
 | PATCH | `/reviews/:id` | review author |
 | DELETE | `/reviews/:id` | review author or ADMIN |
-| POST | `/sync/x` | ADMIN, starts import in background → 202 |
-| GET | `/sync/runs?page&limit` | ADMIN, import history |
 
 ## Business rules
 
-- Template `templateUrl` must be a `grokbot://` or `https://` link.
+- A template is created from an x.ai bot link `https://x.ai/bot/<id>` (anything else → 422), and each x.ai bot can be listed only once (409).
 - Publishing needs a description of at least 20 characters; a published template cannot be edited below that.
 - Template updates use optimistic locking: `PATCH` with an outdated `version` → 409.
 - A template with installations cannot be deleted, only archived (409).
 - A category with templates cannot be deleted (409).
 - An admin cannot change their own role (422).
-- Only one X marketplace sync can run at a time (409).
 - Only `PUBLISHED` templates can be installed (422), and only once per user (409).
 - A review needs the template to be installed first (422), cannot be for your own template (422), and is limited to one per user and template (409). Rating is 1–5.
 
-## X marketplace sync
+## x.ai integration
 
-Bots from the X internal marketplace are imported as templates with `source: "X"`, `status: "PUBLISHED"`, `externalAuthor` set and no local author (only admins can edit them). The import:
+Users add a template by pasting the bot link from x.ai, e.g. `https://x.ai/bot/SeMqhg9bPD4Qd_8i7I-vN`. `src/x/bot-link.ts` validates the link (https, `x.ai` or `www.x.ai`, `/bot/<id>`, optional trailing slash or query) and extracts the bot id, which is stored as `templates.external_id` (unique). Responses expose:
 
-- runs on startup and then every `X_SYNC_INTERVAL_MINUTES` (0 disables the scheduler), or on demand via `POST /sync/x`;
-- pages through `GET {X_MARKETPLACE_URL}/bots` with bearer `X_MARKETPLACE_TOKEN`; without these the API uses a built-in mock client;
-- upserts by `(source, externalId)`, puts new templates into the `X_IMPORT_CATEGORY_SLUG` category (default `other`), and bumps `version` only when content actually changed;
-- is recorded in `sync_runs` (`RUNNING` → `SUCCESS`/`FAILED` with count or error); a second run while one is in progress → 409.
+- `botId`: the x.ai bot id
+- `xUrl`: `https://x.ai/bot/<id>`
+- `installUrl`: `grokbot://app/v1/bot-template?id=<id>`, the same deeplink as the "Add to Grok Bot" button on x.ai. The frontend opens it after `POST /templates/:id/install` records the installation.
 
 Local dev without Docker for the API:
 
