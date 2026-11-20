@@ -85,7 +85,8 @@ bun test
 | POST | `/templates/:id/reviews` | logged in |
 | PATCH | `/reviews/:id` | review author |
 | DELETE | `/reviews/:id` | review author or ADMIN |
-| GET | `/agents`, `/agents/:id` | public (X marketplace PoC) |
+| POST | `/sync/x` | ADMIN, starts import in background → 202 |
+| GET | `/sync/runs?page&limit` | ADMIN, import history |
 
 ## Business rules
 
@@ -95,17 +96,18 @@ bun test
 - A template with installations cannot be deleted, only archived (409).
 - A category with templates cannot be deleted (409).
 - An admin cannot change their own role (422).
+- Only one X marketplace sync can run at a time (409).
 - Only `PUBLISHED` templates can be installed (422), and only once per user (409).
 - A review needs the template to be installed first (422), cannot be for your own template (422), and is limited to one per user and template (409). Rating is 1–5.
 
-- `GET /agents?page=1&limit=20&q=&author=` → `{ items, page, limit, total }` (`limit` max 100)
-- `GET /agents/:id` → `Agent` or 404
+## X marketplace sync
 
-`Agent`: `id`, `name`, `description`, `author`, `pageUrl`, `templateUrl` (`grokbot://app/v1/bot-template?id=<id>`).
+Bots from the X internal marketplace are imported as templates with `source: "X"`, `status: "PUBLISHED"`, `externalAuthor` set and no local author (only admins can edit them). The import:
 
-## X marketplace
-
-Set `X_MARKETPLACE_URL` and `X_MARKETPLACE_TOKEN` (bearer JWT) to use the real X marketplace (`GET {url}/bots`, `GET {url}/bots/:id`). Without them the API serves mock data. Upstream errors return 502.
+- runs on startup and then every `X_SYNC_INTERVAL_MINUTES` (0 disables the scheduler), or on demand via `POST /sync/x`;
+- pages through `GET {X_MARKETPLACE_URL}/bots` with bearer `X_MARKETPLACE_TOKEN`; without these the API uses a built-in mock client;
+- upserts by `(source, externalId)`, puts new templates into the `X_IMPORT_CATEGORY_SLUG` category (default `other`), and bumps `version` only when content actually changed;
+- is recorded in `sync_runs` (`RUNNING` → `SUCCESS`/`FAILED` with count or error); a second run while one is in progress → 409.
 
 Local dev without Docker for the API:
 

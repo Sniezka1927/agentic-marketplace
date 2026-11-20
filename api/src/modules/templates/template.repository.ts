@@ -30,6 +30,15 @@ export type TemplateChanges = Partial<
   >
 >;
 
+export type ExternalTemplate = {
+  externalId: string;
+  name: string;
+  description: string;
+  templateUrl: string;
+  externalAuthor: string;
+  categoryId: string;
+};
+
 export interface TemplateRepository {
   list(query: PageRequest & TemplateFilter): Promise<Page<TemplateDetails>>;
   findById(id: string): Promise<TemplateDetails | null>;
@@ -37,6 +46,7 @@ export interface TemplateRepository {
   update(id: string, expectedVersion: number, changes: TemplateChanges): Promise<TemplateDetails | null>;
   delete(id: string): Promise<void>;
   countInstallations(id: string): Promise<number>;
+  upsertExternal(data: ExternalTemplate): Promise<void>;
   refreshInstallStats(id: string): Promise<void>;
   refreshRatingStats(id: string): Promise<void>;
 }
@@ -116,6 +126,28 @@ export const createTemplateRepository = (db: Database): TemplateRepository => {
 
     async delete(id) {
       await db.delete(templates).where(eq(templates.id, id));
+    },
+
+    async upsertExternal(data) {
+      await db
+        .insert(templates)
+        .values({
+          ...data,
+          source: "X",
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: [templates.source, templates.externalId],
+          set: {
+            name: data.name,
+            description: data.description,
+            templateUrl: data.templateUrl,
+            externalAuthor: data.externalAuthor,
+            version: sql`${templates.version} + 1`,
+          },
+          setWhere: sql`(${templates.name}, ${templates.description}, ${templates.templateUrl}, ${templates.externalAuthor}) is distinct from (excluded.name, excluded.description, excluded.template_url, excluded.external_author)`,
+        });
     },
 
     async refreshInstallStats(id) {

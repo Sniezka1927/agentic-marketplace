@@ -3,13 +3,14 @@ import { createApp } from "../src/app";
 import { createContainer } from "../src/container";
 import { db } from "../src/db/client";
 import { users } from "../src/db/schema";
+import type { MarketplaceClient } from "../src/x-marketplace";
 
 export { db };
 
 export type TestApp = ReturnType<typeof createTestApp>;
 
-export const createTestApp = () => {
-  const container = createContainer(db);
+export const createTestApp = (marketplaceClient?: MarketplaceClient) => {
+  const container = createContainer(db, marketplaceClient);
   return Object.assign(createApp(container), { events: container.events });
 };
 

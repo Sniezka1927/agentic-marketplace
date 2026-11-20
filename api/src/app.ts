@@ -9,9 +9,9 @@ import { authRoutes } from "./modules/auth/auth.routes";
 import { categoryRoutes } from "./modules/categories/category.routes";
 import { installationRoutes } from "./modules/installations/installation.routes";
 import { reviewRoutes } from "./modules/reviews/review.routes";
+import { syncRoutes } from "./modules/sync/sync.routes";
 import { templateRoutes } from "./modules/templates/template.routes";
 import { userRoutes } from "./modules/users/user.routes";
-import { agentsRoutes } from "./routes/agents";
 
 export const createApp = (container: Container) => {
   const guard = createAuthGuard(container.authService);
@@ -43,7 +43,7 @@ export const createApp = (container: Container) => {
     .use(templateRoutes(container.templateService, guard))
     .use(installationRoutes(container.installationService, guard))
     .use(reviewRoutes(container.reviewService, guard))
-    .use(agentsRoutes(container.marketplaceClient));
+    .use(syncRoutes(container.syncService, guard));
 };
 
 export type App = ReturnType<typeof createApp>;
