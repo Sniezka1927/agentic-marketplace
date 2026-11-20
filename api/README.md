@@ -73,6 +73,12 @@ bun test
 | PATCH | `/templates/:id` | author or ADMIN, body must include current `version` |
 | POST | `/templates/:id/publish`, `/templates/:id/archive` | author or ADMIN |
 | DELETE | `/templates/:id` | author or ADMIN |
+| POST, DELETE | `/templates/:id/install` | logged in |
+| GET | `/installations/mine?page&limit` | logged in |
+| GET | `/templates/:id/reviews?page&limit` | public |
+| POST | `/templates/:id/reviews` | logged in |
+| PATCH | `/reviews/:id` | review author |
+| DELETE | `/reviews/:id` | review author or ADMIN |
 | GET | `/agents`, `/agents/:id` | public (X marketplace PoC) |
 
 ## Business rules
@@ -83,6 +89,8 @@ bun test
 - A template with installations cannot be deleted, only archived (409).
 - A category with templates cannot be deleted (409).
 - An admin cannot change their own role (422).
+- Only `PUBLISHED` templates can be installed (422), and only once per user (409).
+- A review needs the template to be installed first (422), cannot be for your own template (422), and is limited to one per user and template (409). Rating is 1–5.
 
 - `GET /agents?page=1&limit=20&q=&author=` → `{ items, page, limit, total }` (`limit` max 100)
 - `GET /agents/:id` → `Agent` or 404
